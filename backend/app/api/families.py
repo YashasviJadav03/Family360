@@ -117,6 +117,40 @@ def list_families(
     )
 
 
+def resolve_family(family_id: str, db: Session) -> Family:
+    """Robustly resolve a Family record by canonical ID, case-insensitive ID,
+    numeric index, or Ration Card ID."""
+    clean_id = (family_id or "").strip().upper()
+    if not clean_id:
+        raise HTTPException(status_code=400, detail="Family identifier must not be empty")
+
+    # 1. Exact or case-insensitive match on Family ID
+    family = db.query(Family).filter(func.upper(Family.family_id) == clean_id).first()
+    if family:
+        return family
+
+    # 2. Handle numeric input (e.g. "1" or "000001" -> "GJ-F000001")
+    if clean_id.isdigit():
+        padded = f"GJ-F{int(clean_id):06d}"
+        family = db.query(Family).filter(Family.family_id == padded).first()
+        if family:
+            return family
+
+    # 3. Handle shorthand like "F000001" -> "GJ-F000001"
+    if clean_id.startswith("F") and clean_id[1:].isdigit():
+        padded = f"GJ-{clean_id}"
+        family = db.query(Family).filter(Family.family_id == padded).first()
+        if family:
+            return family
+
+    # 4. Search by Ration Card ID (e.g. "RC-GJ99788677")
+    family = db.query(Family).filter(func.upper(Family.ration_card_id) == clean_id).first()
+    if family:
+        return family
+
+    raise HTTPException(status_code=404, detail=f"Family '{family_id}' not found")
+
+
 @router.get(
     "/{family_id}",
     response_model=FamilyDetailOut,
@@ -124,10 +158,7 @@ def list_families(
     description="Retrieve the complete 360-degree profile of a family, including demographic attributes, all members, multi-source identity records, active benefits, and applications.",
 )
 def get_family_detail(family_id: str, db: Session = Depends(get_db)):
-    family = db.query(Family).filter(Family.family_id == family_id).first()
-    if not family:
-        raise HTTPException(status_code=404, detail=f"Family '{family_id}' not found")
-    return family
+    return resolve_family(family_id, db)
 
 
 @router.get(
@@ -137,9 +168,7 @@ def get_family_detail(family_id: str, db: Session = Depends(get_db)):
     description="Run the deterministic rule engine to evaluate this family against all 11 Gujarat welfare schemes, returning granular matched and failed rule audits.",
 )
 def get_family_eligibility(family_id: str, db: Session = Depends(get_db)):
-    family = db.query(Family).filter(Family.family_id == family_id).first()
-    if not family:
-        raise HTTPException(status_code=404, detail=f"Family '{family_id}' not found")
+    family = resolve_family(family_id, db)
     all_rules = db.query(EligibilityRule).all()
     return evaluate_eligibility(family, family.members, all_rules)
 
@@ -151,7 +180,8 @@ def get_family_eligibility(family_id: str, db: Session = Depends(get_db)):
     description="Analyze welfare entitlement delivery for this family, partitioning schemes into Receiving (Claimed), Eligible but Not Applied (Gap), and Not Eligible.",
 )
 def get_family_benefit_gap(family_id: str, db: Session = Depends(get_db)):
-    return compute_benefit_gap(family_id, db)
+    family = resolve_family(family_id, db)
+    return compute_benefit_gap(family.family_id, db)
 
 
 @router.get(
@@ -167,9 +197,7 @@ def explain_family_scheme_eligibility(
     from app.models.scheme import Scheme
     from app.services.explanation_service import generate_gap_explanation
 
-    family = db.query(Family).filter(Family.family_id == family_id).first()
-    if not family:
-        raise HTTPException(status_code=404, detail=f"Family '{family_id}' not found")
+    family = resolve_family(family_id, db)
 
     scheme = db.query(Scheme).filter(Scheme.scheme_id == scheme_id).first()
     if not scheme:

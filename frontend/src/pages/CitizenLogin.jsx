@@ -4,11 +4,14 @@ import { Users, ArrowRight, ShieldCheck, Search, AlertCircle } from 'lucide-reac
 import NationalGovHeader from '../components/NationalGovHeader';
 import NationalGovFooter from '../components/NationalGovFooter';
 
+import { useAuth } from '../context/AuthContext';
+
 export default function CitizenLogin() {
-  const [familyId, setFamilyId] = useState('GJ-F000525');
+  const [familyId, setFamilyId] = useState('GJ-F000012');
   const [lang, setLang] = useState('en');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -23,10 +26,12 @@ export default function CitizenLogin() {
       );
       return;
     }
+    // Update Citizen session to this specific family ID
+    login('citizen', { id: cleanId });
     navigate(`/citizen/family/${cleanId}`);
   };
 
-  const sampleIds = ['GJ-F000525', 'GJ-F000001', 'GJ-F000024', 'GJ-F000002'];
+  const sampleIds = ['GJ-F000012', 'GJ-F000001', 'GJ-F000024', 'GJ-F000002', 'GJ-F000525'];
 
   return (
     <div className="min-h-screen bg-[#F6F8FC] flex flex-col justify-between text-slate-text">

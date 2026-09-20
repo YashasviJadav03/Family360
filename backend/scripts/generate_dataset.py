@@ -162,11 +162,18 @@ def main():
     db.commit()
 
     # 3. Generate Families & Members
-    N_FAMILIES = int(os.getenv("SEED_FAMILIES_COUNT", "3000"))
-    print(f"Generating {N_FAMILIES} families and demographic members...")
+    N_FAMILIES = int(os.getenv("SEED_FAMILIES_COUNT", "1000"))
+    target_f_indices = list(range(1, N_FAMILIES + 1))
+    # Guarantee key showcase demo IDs are always present in database
+    for anchor_id in [525, 1954]:
+        if anchor_id not in target_f_indices:
+            target_f_indices.append(anchor_id)
+
+    max_idx = max(target_f_indices)
+    print(f"Generating {len(target_f_indices)} families and demographic members (up to index {max_idx})...")
 
     # Log-normal annual income with median ~180,000
-    incomes = np.random.lognormal(mean=12.05, sigma=0.42, size=N_FAMILIES).astype(int)
+    incomes = np.random.lognormal(mean=12.05, sigma=0.42, size=max_idx + 1).astype(int)
     # Clip between ₹35,000 and ₹750,000
     incomes = np.clip(incomes, 35000, 750000)
 
@@ -196,7 +203,7 @@ def main():
 
     ref_date = date(2026, 9, 20)
 
-    for f_idx in range(1, N_FAMILIES + 1):
+    for f_idx in target_f_indices:
         family_id = f"GJ-F{f_idx:06d}"
         district = random.choice(districts_list)
         taluka = random.choice(DISTRICTS_DATA[district])
@@ -204,7 +211,7 @@ def main():
         social_category = random.choices(SOCIAL_CATEGORIES, weights=SOCIAL_WEIGHTS)[0]
         housing_status = random.choices(["Owned", "Rented", "None"], weights=[0.65, 0.30, 0.05])[0]
         land_acres = round(float(np.random.exponential(scale=1.5)), 2) if random.random() < 0.4 else None
-        annual_income = int(incomes[f_idx - 1])
+        annual_income = int(incomes[f_idx])
 
         # Family size weighted 4-5
         family_size = random.choices([2, 3, 4, 5, 6, 7], weights=[0.10, 0.20, 0.35, 0.25, 0.07, 0.03])[0]

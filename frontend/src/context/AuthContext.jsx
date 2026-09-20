@@ -9,14 +9,14 @@ export const DEMO_PERSONAS = {
     roleLabel: 'Citizen / Head of Household',
     roleLabelGu: 'નાગરિક / કુટુંબના વડા',
     roleLabelHi: 'नागरिक / परिवार का मुखिया',
-    id: 'GJ-F000525',
-    name: 'Vijay Dipak Thakor',
-    jurisdiction: 'Anand Taluka, Anand District',
-    rationCard: 'RC-GJ-0525',
-    avatar: 'VT',
+    id: 'GJ-F000012',
+    name: 'Dinesh Haresh Shah',
+    jurisdiction: 'Daskroi Taluka, Ahmedabad District',
+    rationCard: 'RC-GJ-0012',
+    avatar: 'DS',
     badgeColor: 'amber',
     permissions: ['view_family_benefits', 'apply_schemes', 'download_dossier', 'file_grievance', 'query_ai'],
-    defaultRedirect: '/citizen/family/GJ-F000525',
+    defaultRedirect: '/citizen/family/GJ-F000012',
     description: 'Access individual household welfare profile, unclaimed entitlement gap detection, and AI assistant.'
   },
   taluka_officer: {
@@ -72,9 +72,9 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : DEMO_PERSONAS.district_officer; // Default fallback for seamless experience
+      return saved ? JSON.parse(saved) : null;
     } catch {
-      return DEMO_PERSONAS.district_officer;
+      return null;
     }
   });
 

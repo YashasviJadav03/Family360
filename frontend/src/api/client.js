@@ -31,12 +31,14 @@ api.interceptors.response.use(
   }
 );
 
+const cleanFamilyId = (id) => encodeURIComponent((id || '').toString().trim().toUpperCase());
+
 export const familyApi = {
   getFamilies: (params) => api.get('/families', { params }).then((r) => r.data),
-  getFamilyById: (familyId) => api.get(`/families/${familyId}`).then((r) => r.data),
-  getEligibility: (familyId) => api.get(`/families/${familyId}/eligibility`).then((r) => r.data),
-  getBenefitGap: (familyId) => api.get(`/families/${familyId}/benefit-gap`).then((r) => r.data),
-  getExplanation: (familyId, schemeId) => api.get(`/families/${familyId}/schemes/${schemeId}/explain`).then((r) => r.data),
+  getFamilyById: (familyId) => api.get(`/families/${cleanFamilyId(familyId)}`).then((r) => r.data),
+  getEligibility: (familyId) => api.get(`/families/${cleanFamilyId(familyId)}/eligibility`).then((r) => r.data),
+  getBenefitGap: (familyId) => api.get(`/families/${cleanFamilyId(familyId)}/benefit-gap`).then((r) => r.data),
+  getExplanation: (familyId, schemeId) => api.get(`/families/${cleanFamilyId(familyId)}/schemes/${schemeId}/explain`).then((r) => r.data),
 };
 
 export const schemeApi = {

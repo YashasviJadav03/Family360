@@ -7,10 +7,24 @@ import {
 } from 'lucide-react';
 import NationalGovHeader from '../components/NationalGovHeader';
 import NationalGovFooter from '../components/NationalGovFooter';
+import { useAuth } from '../context/AuthContext';
 import { t } from '../i18n';
 
-// Sample families curated directly from the active 3,000 database
+// Sample families curated directly from the active verified database
 const FEATURED_FAMILIES = [
+  {
+    family_id: 'GJ-F000012',
+    head_name: 'Dinesh Haresh Shah',
+    district: 'Ahmedabad',
+    taluka: 'Daskroi',
+    social_category: 'SC',
+    annual_income: 140701,
+    family_size: 5,
+    gaps_count: 5,
+    active_count: 2,
+    highlight_gap: 'Pre-Matric Scholarship & Ganga Swarupa Yojana',
+    ration_card: 'RC-GJ-0012',
+  },
   {
     family_id: 'GJ-F000525',
     head_name: 'Vijay Dipak Thakor',
@@ -69,16 +83,27 @@ export default function LandingPage() {
   const [lang, setLang] = useState('en');
   const [quickId, setQuickId] = useState('');
   const navigate = useNavigate();
+  const { isOfficer, login } = useAuth();
 
   const handleQuickSearch = (e) => {
     e.preventDefault();
     const query = quickId.trim().toUpperCase();
     if (!query) return;
-    if (query.startsWith('GJ-F') || query.startsWith('GJ-')) {
-      navigate(`/officer/families/${query}`);
+    if (isOfficer) {
+      if (query.startsWith('GJ-F') || query.startsWith('GJ-')) {
+        navigate(`/officer/families/${query}`);
+      } else {
+        navigate(`/officer/families?search=${encodeURIComponent(query)}`);
+      }
     } else {
-      navigate(`/officer/families?search=${encodeURIComponent(query)}`);
+      login('citizen', { id: query });
+      navigate(`/citizen/family/${query}`);
     }
+  };
+
+  const handleViewCitizen = (targetFamilyId) => {
+    login('citizen', { id: targetFamilyId });
+    navigate(`/citizen/family/${targetFamilyId}`);
   };
 
   return (
@@ -160,13 +185,18 @@ export default function LandingPage() {
                 <span className="text-[11px] font-medium text-slate-300">
                   {t('quick_demo_ids', lang)}
                 </span>
-                {['GJ-F000525', 'GJ-F000001', 'GJ-F000024', 'GJ-F000002'].map((demoId) => (
+                {['GJ-F000012', 'GJ-F000001', 'GJ-F000024', 'GJ-F000002', 'GJ-F000525'].map((demoId) => (
                   <button
                     key={demoId}
                     type="button"
                     onClick={() => {
                       setQuickId(demoId);
-                      navigate(`/officer/families/${demoId}`);
+                      if (isOfficer) {
+                        navigate(`/officer/families/${demoId}`);
+                      } else {
+                        login('citizen', { id: demoId });
+                        navigate(`/citizen/family/${demoId}`);
+                      }
                     }}
                     className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all hover:scale-105"
                   >
@@ -346,12 +376,13 @@ export default function LandingPage() {
 
                 <div className="flex items-center justify-center text-[11px] text-slate-500 mt-2.5">
                   <span>Direct Demo:</span>
-                  <Link
-                    to="/citizen/family/GJ-F000525"
+                  <button
+                    type="button"
+                    onClick={() => handleViewCitizen('GJ-F000012')}
                     className="ml-1 text-navy font-bold hover:underline"
                   >
-                    Open Household GJ-F000525 →
-                  </Link>
+                    Open Household GJ-F000012 →
+                  </button>
                 </div>
               </div>
             </div>
@@ -447,19 +478,30 @@ export default function LandingPage() {
 
                   {/* Actions */}
                   <div className="mt-4 pt-3 border-t border-slate-200 flex items-center gap-2">
-                    <Link
-                      to={`/officer/families/${fam.family_id}`}
-                      className="flex-1 py-1.5 text-center text-[11px] font-bold text-white bg-navy hover:bg-navy-dark rounded-md transition-colors"
-                    >
-                      {t('view_family_detail', lang)}
-                    </Link>
-                    <Link
-                      to={`/citizen/family/${fam.family_id}`}
+                    {isOfficer ? (
+                      <Link
+                        to={`/officer/families/${fam.family_id}`}
+                        className="flex-1 py-1.5 text-center text-[11px] font-bold text-white bg-navy hover:bg-navy-dark rounded-md transition-colors"
+                      >
+                        {t('view_family_detail', lang)}
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleViewCitizen(fam.family_id)}
+                        className="flex-1 py-1.5 text-center text-[11px] font-bold text-white bg-navy hover:bg-navy-dark rounded-md transition-colors"
+                      >
+                        {t('view_family_detail', lang)}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleViewCitizen(fam.family_id)}
                       className="px-2 py-1.5 text-[11px] font-semibold text-slate-700 hover:text-navy hover:bg-slate-200 rounded-md border border-slate-300 transition-colors"
                       title={t('view_as_citizen', lang)}
                     >
                       <Users className="w-3.5 h-3.5 text-[#FF671F]" />
-                    </Link>
+                    </button>
                   </div>
                 </div>
               ))}

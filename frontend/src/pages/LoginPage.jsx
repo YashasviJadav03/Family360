@@ -10,17 +10,17 @@ import NationalGovHeader from '../components/NationalGovHeader';
 import NationalGovFooter from '../components/NationalGovFooter';
 import { t } from '../i18n';
 
-// Sample families directly from the 3,000 household dataset for 1-click citizen login
+// Sample families directly from the household dataset for 1-click citizen login
 const SAMPLE_CITIZENS = [
   {
-    id: 'GJ-F000525',
-    name: 'Vijay Dipak Thakor',
-    district: 'Anand',
-    taluka: 'Anand',
+    id: 'GJ-F000012',
+    name: 'Dinesh Haresh Shah',
+    district: 'Ahmedabad',
+    taluka: 'Daskroi',
     category: 'SC',
-    income: '₹1,24,173',
+    income: '₹1,40,701',
     gapsCount: 5,
-    highlight: 'Dr. Ambedkar Awas & Sant Surdas Pension'
+    highlight: '5 Benefit Gaps · Pre-Matric & Ganga Swarupa'
   },
   {
     id: 'GJ-F000001',
@@ -51,6 +51,16 @@ const SAMPLE_CITIZENS = [
     income: '₹1,61,446',
     gapsCount: 1,
     highlight: 'Indira Gandhi Old Age Pension'
+  },
+  {
+    id: 'GJ-F000525',
+    name: 'Vijay Dipak Thakor',
+    district: 'Anand',
+    taluka: 'Anand',
+    category: 'SC',
+    income: '₹1,24,173',
+    gapsCount: 5,
+    highlight: 'Dr. Ambedkar Awas & Sant Surdas Pension'
   }
 ];
 
@@ -75,7 +85,7 @@ export default function LoginPage() {
 
   // Citizen Form State
   const [citizenInputType, setCitizenInputType] = useState('family_id'); // 'family_id' | 'aadhaar'
-  const [familyIdInput, setFamilyIdInput] = useState('GJ-F000525');
+  const [familyIdInput, setFamilyIdInput] = useState('GJ-F000012');
   const [aadhaarInput, setAadhaarInput] = useState('•••• •••• 4892');
   const [otpSent, setOtpSent] = useState(false);
   const [otpInput, setOtpInput] = useState('782941');

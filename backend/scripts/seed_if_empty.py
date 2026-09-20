@@ -17,9 +17,9 @@ def seed_if_empty():
             return
 
         print("[Seed] Database is empty! Running initial dataset generator...")
-        # Use 300 families for faster boot on free-tier containers unless overridden
+        # Use 1000 families for rich dataset on cloud containers unless overridden
         if "SEED_FAMILIES_COUNT" not in os.environ:
-            os.environ["SEED_FAMILIES_COUNT"] = "300"
+            os.environ["SEED_FAMILIES_COUNT"] = "1000"
 
         from scripts.generate_dataset import main as run_generator
         run_generator()
