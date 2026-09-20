@@ -4,9 +4,12 @@
 
 @layer base {
   body {
-    @apply bg-[#F6F8FC] text-[#172033] font-sans antialiased;
+    background-color: #F4F6FA;
+    color: #1A202C;
+    font-family: 'Inter', 'Noto Sans Gujarati', system-ui, -apple-system, sans-serif;
     margin: 0;
     padding: 0;
+    -webkit-font-smoothing: antialiased;
   }
   
   #root {
@@ -17,29 +20,193 @@
   }
 }
 
-/* Restrained, crisp DPI aesthetic styling */
-.border-subtle {
-  border: 1px solid #E4E7EC;
+/* Official Government DPI Color Tokens */
+:root {
+  --tiranga-saffron: #FF671F;
+  --tiranga-saffron-dark: #E65100;
+  --tiranga-white: #FFFFFF;
+  --tiranga-green: #138808;
+  --tiranga-green-dark: #0A6305;
+  --tiranga-navy: #0A2540;
+  --tiranga-gold: #FFB81C;
+  --gujarat-royal: #172B63;
 }
 
+/* Government Card Styling with Colored Top-Border Accents */
 .card-dpi {
   background-color: #FFFFFF;
-  border: 1px solid #E4E7EC;
-  border-radius: 8px;
+  border: 1px solid #DDE2EC;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05), 0 1px 2px rgba(16, 24, 40, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Custom minimal scrollbar */
+.card-dpi:hover {
+  box-shadow: 0 4px 12px -2px rgba(23, 43, 99, 0.08), 0 2px 4px -1px rgba(23, 43, 99, 0.04);
+}
+
+/* Government Accent Top Borders */
+.gov-card-saffron {
+  border-top: 4px solid var(--tiranga-saffron);
+}
+
+.gov-card-green {
+  border-top: 4px solid var(--tiranga-green);
+}
+
+.gov-card-navy {
+  border-top: 4px solid var(--gujarat-royal);
+}
+
+.gov-card-gold {
+  border-top: 4px solid var(--tiranga-gold);
+}
+
+.gov-card-amber {
+  border-top: 4px solid #D97706;
+}
+
+/* Official Government Ribbon Gradient */
+.gov-ribbon-tiranga {
+  background: linear-gradient(90deg, #FF671F 0%, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%, #0A6305 100%);
+}
+
+.gov-gradient-navy {
+  background: linear-gradient(135deg, #0A192F 0%, #172B63 100%);
+}
+
+.gov-gradient-saffron {
+  background: linear-gradient(135deg, #FF671F 0%, #E65100 100%);
+}
+
+.gov-gradient-green {
+  background: linear-gradient(135deg, #138808 0%, #0A6305 100%);
+}
+
+.gov-gradient-gold {
+  background: linear-gradient(135deg, #FFB81C 0%, #D97706 100%);
+}
+
+/* Live Announcement Marquee */
+@keyframes gov-ticker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-gov-ticker {
+  display: inline-block;
+  white-space: nowrap;
+  animation: gov-ticker 32s linear infinite;
+}
+
+.animate-gov-ticker:hover {
+  animation-play-state: paused;
+}
+
+/* Pulse animation for live sync */
+@keyframes gov-pulse-glow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+
+.gov-pulse {
+  animation: gov-pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #F2F4F7;
+  background: #F1F4F9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D0D5DD;
-  border-radius: 3px;
+  background: #CBD5E1;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #98A2B3;
+  background: #94A3B8;
+}
+
+/* Official Government Badges & Tags */
+.gov-badge-saffron {
+  background-color: #FFF7ED;
+  color: #C2410C;
+  border: 1px solid #FDBA74;
+  font-weight: 600;
+}
+
+.gov-badge-green {
+  background-color: #F0FDF4;
+  color: #15803D;
+  border: 1px solid #86EFAC;
+  font-weight: 600;
+}
+
+.gov-badge-navy {
+  background-color: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #93C5FD;
+  font-weight: 600;
+}
+
+.gov-badge-gold {
+  background-color: #FEFCE8;
+  color: #A16207;
+  border: 1px solid #FDE047;
+  font-weight: 600;
+}
+
+.gov-badge-purple {
+  background-color: #FAF5FF;
+  color: #7E22CE;
+  border: 1px solid #D8B4FE;
+  font-weight: 600;
+}
+
+.gov-badge-rose {
+  background-color: #FFF1F2;
+  color: #BE123C;
+  border: 1px solid #FDA4AF;
+  font-weight: 600;
+}
+
+/* Official Government Stamp Effect */
+.gov-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1.5px dashed #C2410C;
+  color: #C2410C;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background-color: rgba(255, 247, 237, 0.7);
+}
+
+.gov-stamp-green {
+  border-color: #15803D;
+  color: #15803D;
+  background-color: rgba(240, 253, 244, 0.7);
+}
+
+/* Interactive Card Effects */
+.gov-card-interactive {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease;
+}
+
+.gov-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -3px rgba(10, 37, 64, 0.08), 0 4px 6px -2px rgba(10, 37, 64, 0.03);
+}
+
+/* Official Government Tricolor Bottom Hairline */
+.gov-tricolor-line {
+  height: 3px;
+  background: linear-gradient(90deg, #FF671F 0%, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%, #0A6305 100%);
 }

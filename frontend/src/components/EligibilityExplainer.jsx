@@ -57,27 +57,37 @@ export default function EligibilityExplainer({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-dark/60 backdrop-blur-[2px] flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-modal border border-slate-border w-full max-w-xl overflow-hidden animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-navy-dark/70 backdrop-blur-[3px] flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-2xl border-2 border-slate-300 w-full max-w-xl overflow-hidden animate-in fade-in duration-200">
+        {/* Tricolor Ribbon */}
+        <div className="h-[4px] w-full grid grid-cols-3">
+          <div className="bg-[#FF671F]"></div>
+          <div className="bg-[#FFFFFF]"></div>
+          <div className="bg-[#138808]"></div>
+        </div>
+
         {/* Header */}
-        <div className="bg-navy px-6 py-4 text-white flex items-start justify-between">
+        <div className="bg-gradient-to-r from-navy via-navy-dark to-navy px-6 py-4 text-white flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-mono text-[11px] bg-white/20 px-2 py-0.5 rounded font-semibold text-orange-light">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="font-mono text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-bold text-amber-300 border border-white/20">
                 {scheme.scheme_id}
               </span>
-              <span className="text-xs text-slate-200 font-medium flex items-center gap-1">
-                <Tag className="w-3 h-3 text-orange" /> {scheme.category}
+              <span className="text-xs text-slate-200 font-semibold flex items-center gap-1">
+                <Tag className="w-3.5 h-3.5 text-orange" /> {scheme.category}
+              </span>
+              <span className="gov-stamp text-[9px] text-amber-200 border-amber-300/50 bg-white/10">
+                GOVT RESOLUTION VERIFIED
               </span>
             </div>
-            <h3 className="text-base font-semibold leading-snug">{scheme.scheme_name}</h3>
-            <p className="text-xs text-slate-300 mt-1 flex items-center gap-1">
-              <Building2 className="w-3.5 h-3.5 text-slate-400" /> {scheme.department}
+            <h3 className="text-base font-bold leading-snug text-white">{scheme.scheme_name}</h3>
+            <p className="text-xs text-slate-300 mt-1 flex items-center gap-1.5 font-medium">
+              <Building2 className="w-3.5 h-3.5 text-amber-400" /> {scheme.department}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-300 hover:text-white p-1 rounded hover:bg-white/10 transition-colors"
+            className="text-slate-300 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

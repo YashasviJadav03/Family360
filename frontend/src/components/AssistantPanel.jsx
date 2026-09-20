@@ -60,51 +60,67 @@ export default function AssistantPanel() {
   };
 
   return (
-    <div className="card-dpi bg-white border border-slate-border flex flex-col overflow-hidden shadow-sm">
+    <div className="card-dpi bg-white border border-slate-200 flex flex-col overflow-hidden shadow-sm gov-card-saffron">
+      {/* Tricolor Hairline */}
+      <div className="h-[3px] w-full grid grid-cols-3">
+        <div className="bg-[#FF671F]"></div>
+        <div className="bg-[#FFFFFF]"></div>
+        <div className="bg-[#138808]"></div>
+      </div>
+
       {/* Header */}
-      <div className="bg-navy p-4 text-white flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded bg-navy-light flex items-center justify-center text-orange">
-            <Bot className="w-4 h-4" />
+      <div className="bg-gradient-to-r from-navy via-navy-dark to-navy p-4 text-white flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white shadow-md border border-amber-300">
+            <Bot className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <h3 className="text-sm font-bold">Natural-Language Officer Query Assistant</h3>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-mono px-1.5 py-0.2 rounded font-semibold">
-                AI Phrasing Layer
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-black tracking-tight">Statutory Welfare Assistant (સહાયક)</h3>
+              <span className="gov-stamp text-[9px] text-amber-200 border-amber-300/50 bg-white/10">
+                Natural-Language NLP
               </span>
             </div>
             <p className="text-[11px] text-slate-300">
-              Deterministic rule engine decides · LLM synthesizes administrative explanations
+              Deterministic rule engine evaluates · LLM formats plain-language administrative responses
             </p>
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-300 bg-white/10 px-2.5 py-1 rounded">
+        <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 rounded-full font-bold">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Intent-Matched & Safe</span>
+          <span>Strict Deterministic Guardrails</span>
         </div>
       </div>
 
-      {/* Suggested Questions Chips */}
-      <div className="p-3 bg-slate-50 border-b border-slate-border">
-        <div className="flex items-center gap-1.5 mb-2">
-          <Sparkles className="w-3.5 h-3.5 text-orange" />
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-secondary">
-            Suggested Administrative Queries (Live Demo Chips)
+      {/* Suggested Questions Chips with Vibrant Color Accents */}
+      <div className="p-3.5 bg-gradient-to-r from-amber-50/60 via-slate-50 to-blue-50/60 border-b border-slate-200">
+        <div className="flex items-center gap-1.5 mb-2.5">
+          <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-700">
+            Suggested Administrative Queries (Click to Query Instantly):
           </span>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {suggestedQuestions.map((q, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSend(q)}
-              disabled={loading}
-              className="text-left text-xs px-2.5 py-1.5 rounded-full bg-white hover:bg-orange/10 hover:border-orange hover:text-navy border border-slate-border text-slate-700 transition-colors disabled:opacity-50"
-            >
-              • {q}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-2">
+          {suggestedQuestions.map((q, idx) => {
+            const chipStyles = [
+              'hover:border-orange-400 hover:bg-orange-50 text-orange-950 border-orange-200 bg-white',
+              'hover:border-blue-400 hover:bg-blue-50 text-blue-950 border-blue-200 bg-white',
+              'hover:border-emerald-400 hover:bg-emerald-50 text-emerald-950 border-emerald-200 bg-white',
+              'hover:border-purple-400 hover:bg-purple-50 text-purple-950 border-purple-200 bg-white',
+            ];
+            return (
+              <button
+                key={idx}
+                onClick={() => handleSend(q)}
+                disabled={loading}
+                className={`text-left text-xs px-3 py-1.5 rounded-full font-bold border transition-all shadow-xs disabled:opacity-50 flex items-center gap-1.5 ${chipStyles[idx % chipStyles.length]}`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                <span>{q}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

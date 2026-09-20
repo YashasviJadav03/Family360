@@ -3,11 +3,13 @@ import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, Users, ShieldCheck, MapPin, IndianRupee, Home,
   AlertCircle, CheckCircle2, Clock, FileText, Database, Send,
-  ChevronRight, Sparkles, Building2, Tag, Check, Award
+  ChevronRight, Sparkles, Building2, Tag, Check, Award, Copy,
+  Printer, Bot, ExternalLink, RefreshCw, AlertTriangle
 } from 'lucide-react';
 import OfficerLayout from '../components/OfficerLayout';
 import FamilyGraph from '../components/FamilyGraph';
 import BenefitGapPanel from '../components/BenefitGapPanel';
+import AssistantDrawer from '../components/AssistantDrawer';
 import { familyApi, applicationApi } from '../api/client';
 
 export default function OfficerFamilyDetailPage() {
@@ -15,9 +17,17 @@ export default function OfficerFamilyDetailPage() {
   const [family, setFamily] = useState(null);
   const [gapReport, setGapReport] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview'); // overview, members, benefits, applications, identity
+  const [activeTab, setActiveTab] = useState('overview'); // overview, benefits, members, applications, identity
   const [selectedMember, setSelectedMember] = useState(null);
   const [updatingAppId, setUpdatingAppId] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
   const loadData = async () => {
     try {
@@ -42,17 +52,25 @@ export default function OfficerFamilyDetailPage() {
     loadData();
   }, [familyId]);
 
+  const handleCopyId = () => {
+    navigator.clipboard?.writeText(familyId);
+    setCopied(true);
+    showToast(`Family ID ${familyId} copied to clipboard!`);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleUpdateApplication = async (appId, newStatus) => {
     try {
       setUpdatingAppId(appId);
       await applicationApi.updateApplicationStatus(appId, {
         status: newStatus,
-        assigned_officer: 'DWO Ahmedabad',
+        assigned_officer: 'District Welfare Officer · Gujarat State Administration',
       });
+      showToast(`Application ${appId} marked as ${newStatus} successfully.`);
       await loadData();
     } catch (err) {
       console.error('Failed to update application status:', err);
-      alert('Could not update application status.');
+      alert('Could not update application status. Please check backend connection.');
     } finally {
       setUpdatingAppId(null);
     }
@@ -61,9 +79,10 @@ export default function OfficerFamilyDetailPage() {
   if (loading) {
     return (
       <OfficerLayout>
-        <div className="card-dpi p-16 text-center">
-          <div className="w-8 h-8 border-2 border-navy border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-xs text-slate-secondary">Loading unified Family 360 profile...</p>
+        <div className="card-dpi p-16 text-center bg-white border border-slate-border">
+          <div className="w-10 h-10 border-3 border-navy border-t-[#FF671F] rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm font-semibold text-navy">Accessing Gujarat Family ID Registry...</p>
+          <p className="text-xs text-slate-secondary mt-1">Cross-referencing civil registries & evaluating 11 welfare rules</p>
         </div>
       </OfficerLayout>
     );
@@ -72,13 +91,13 @@ export default function OfficerFamilyDetailPage() {
   if (!family) {
     return (
       <OfficerLayout>
-        <div className="card-dpi p-12 text-center text-slate-secondary">
-          <AlertCircle className="w-10 h-10 text-amber-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-text">Family Record Not Found</h3>
-          <p className="text-xs mt-1 mb-4">No civil registration data found for ID "{familyId}".</p>
+        <div className="card-dpi p-12 text-center text-slate-secondary bg-white border-t-4 border-amber-500">
+          <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-slate-text">Family Record Not Found</h3>
+          <p className="text-xs mt-1 mb-5">No civil registration data found for ID "{familyId}".</p>
           <Link
             to="/officer/families"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded text-xs font-semibold text-white bg-navy"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded text-xs font-bold text-white bg-navy hover:bg-navy-dark shadow-sm"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Return to Family Registry</span>
@@ -89,144 +108,261 @@ export default function OfficerFamilyDetailPage() {
   }
 
   const gapCount = gapReport?.gap_count ?? 0;
+  const receivingCount = gapReport?.receiving_count ?? 0;
   const applications = family.applications || [];
   const benefits = family.benefits || [];
   const identityRecords = family.identity_records || [];
+  const headMember = family.members?.find((m) => m.relation_to_head === 'Head') || family.members?.[0];
 
   return (
     <OfficerLayout>
       <div className="space-y-6">
-        {/* Breadcrumb & Navigation Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-slate-border">
-          <div className="flex items-center gap-2">
+        {/* Floating Toast Notification */}
+        {toastMessage && (
+          <div className="fixed bottom-6 right-6 z-50 bg-[#0A2540] text-white px-4 py-2.5 rounded-lg shadow-xl border border-[#FFB81C] flex items-center gap-2 animate-in fade-in slide-in-from-bottom duration-200">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="text-xs font-medium">{toastMessage}</span>
+          </div>
+        )}
+
+        {/* Top Breadcrumb & Live Action Toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-white px-4 py-2.5 rounded-lg border border-slate-border shadow-xs">
+          <div className="flex items-center gap-2 text-xs">
             <Link
               to="/officer/families"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-slate-secondary hover:text-navy"
+              className="inline-flex items-center gap-1 font-bold text-slate-600 hover:text-navy transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Families</span>
+              <span>Families Registry</span>
             </Link>
             <span className="text-slate-300">/</span>
-            <span className="font-mono text-xs font-bold text-navy bg-navy-subtle px-2 py-0.5 rounded">
-              {family.family_id}
-            </span>
-            <span className="text-xs text-slate-secondary">
+            <div className="flex items-center gap-1.5 bg-blue-50/70 border border-blue-200 px-2.5 py-0.5 rounded-full">
+              <span className="font-mono text-xs font-black text-navy">{family.family_id}</span>
+              <button
+                onClick={handleCopyId}
+                title="Copy Family ID"
+                className="text-slate-400 hover:text-navy transition-colors"
+              >
+                {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+              </button>
+            </div>
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-500 font-medium">
               {family.village} · {family.taluka} · {family.district}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              Civil Registry Verified
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Civil Identity Verified</span>
             </span>
+
+            <button
+              onClick={() => showToast('Generating official Welfare Dossier PDF...')}
+              className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-100 border border-slate-border text-slate-700 transition-colors"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-500" />
+              <span>Print Dossier</span>
+            </button>
+
+            <button
+              onClick={() => setAssistantOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded bg-gradient-to-r from-[#FF671F] to-[#E65100] text-white hover:opacity-95 shadow-sm transition-all"
+            >
+              <Bot className="w-3.5 h-3.5" />
+              <span>AI Welfare Audit</span>
+            </button>
           </div>
         </div>
 
-        {/* Hero Family 360 Header Card */}
-        <div className="card-dpi p-5 bg-white border border-slate-border">
-          <div className="flex flex-wrap items-start justify-between gap-4">
+        {/* Hero Family 360 Card with Official Government Accent */}
+        <div className="card-dpi gov-card-saffron p-6 bg-white border border-slate-border relative overflow-hidden">
+          {/* Subtle background seal watermark */}
+          <div className="absolute right-4 top-2 text-slate-100 font-serif font-black text-7xl select-none pointer-events-none opacity-40">
+            360
+          </div>
+
+          <div className="flex flex-wrap items-start justify-between gap-5 relative z-10">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-secondary block mb-0.5">
-                Unified Family Profile
-              </span>
-              <h1 className="text-xl font-bold text-navy">
-                {family.head_name ? `${family.head_name}'s Household` : 'Gujarat Registered Household'}
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="bg-[#FF671F] text-white font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                  Gujarat Family ID
+                </span>
+                <span className="bg-navy text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                  {family.social_category} Category
+                </span>
+                <span className="text-xs text-slate-500 font-mono">
+                  Ration Card: <strong className="text-slate-800">{family.ration_card_id || 'Nil (Unlinked)'}</strong>
+                </span>
+              </div>
+
+              <h1 className="text-2xl font-black text-navy flex items-center gap-2">
+                <span>{headMember ? `${headMember.name}'s Family` : 'Gujarat Household Profile'}</span>
+                <span className="text-sm font-normal text-slate-500 font-mono">({family.family_id})</span>
               </h1>
-              <p className="text-xs text-slate-secondary mt-0.5 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                {family.village}, Taluka {family.taluka}, {family.district} District · Ration Card: {family.ration_card_id || 'Not linked'}
+
+              <p className="text-xs text-slate-600 mt-1 flex items-center gap-1.5 font-medium">
+                <MapPin className="w-3.5 h-3.5 text-[#FF671F]" />
+                Village {family.village}, Taluka {family.taluka}, District {family.district}, Gujarat State
               </p>
             </div>
 
-            {/* Quick Metrics Badge Row */}
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded bg-slate-50 border border-slate-border text-center min-w-[90px]">
-                <span className="text-[10px] text-slate-secondary block">Household</span>
-                <span className="text-sm font-bold font-mono text-slate-text">{family.family_size} Members</span>
+            {/* 4 Crisp, Vibrant Government KPI Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full lg:w-auto">
+              {/* Card 1: Members (Saffron Accent) */}
+              <div className="p-3 rounded-lg bg-orange-50/70 border border-orange-200 text-center min-w-[105px]">
+                <span className="text-[10px] font-bold text-orange-800 uppercase tracking-wider block">
+                  Household
+                </span>
+                <span className="text-lg font-black font-mono text-orange-950">
+                  {family.family_size} Members
+                </span>
+                <span className="text-[10px] text-orange-700 block mt-0.5">Civil Registry</span>
               </div>
-              <div className="p-2.5 rounded bg-slate-50 border border-slate-border text-center min-w-[100px]">
-                <span className="text-[10px] text-slate-secondary block">Annual Income</span>
-                <span className="text-sm font-bold font-mono text-slate-text">
+
+              {/* Card 2: Annual Income (Navy Accent) */}
+              <div className="p-3 rounded-lg bg-blue-50/70 border border-blue-200 text-center min-w-[120px]">
+                <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider block">
+                  Annual Income
+                </span>
+                <span className="text-lg font-black font-mono text-blue-950">
                   ₹{(family.annual_income || 0).toLocaleString('en-IN')}
                 </span>
+                <span className="text-[10px] text-blue-700 block mt-0.5">
+                  {family.annual_income <= 150000 ? 'BPL / Low Income' : 'Moderate'}
+                </span>
               </div>
-              <div className="p-2.5 rounded bg-slate-50 border border-slate-border text-center min-w-[90px]">
-                <span className="text-[10px] text-slate-secondary block">Active Benefits</span>
-                <span className="text-sm font-bold font-mono text-emerald-700">{benefits.length} Schemes</span>
+
+              {/* Card 3: Active Benefits (Emerald Green) */}
+              <div className="p-3 rounded-lg bg-emerald-50/80 border border-emerald-300 text-center min-w-[110px]">
+                <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block flex items-center justify-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  Receiving
+                </span>
+                <span className="text-lg font-black font-mono text-emerald-950">
+                  {receivingCount} Schemes
+                </span>
+                <span className="text-[10px] text-emerald-700 block mt-0.5">Disbursed DBT</span>
               </div>
-              <div className={`p-2.5 rounded border text-center min-w-[100px] ${
-                gapCount > 0 ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-slate-50 border-slate-border'
+
+              {/* Card 4: Actionable Gaps (Vibrant Amber / Crimson Glow) */}
+              <div className={`p-3 rounded-lg border-2 text-center min-w-[115px] relative overflow-hidden ${
+                gapCount > 0
+                  ? 'bg-amber-100/90 border-amber-400 text-amber-950 shadow-sm'
+                  : 'bg-slate-50 border-slate-200 text-slate-600'
               }`}>
-                <span className="text-[10px] font-semibold block">Potential Gaps</span>
-                <span className="text-sm font-bold font-mono text-amber-900">{gapCount} Unserved</span>
+                {gapCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 gov-pulse"></span>
+                )}
+                <span className="text-[10px] font-extrabold uppercase tracking-wider block flex items-center justify-center gap-1 text-amber-900">
+                  <AlertCircle className="w-3 h-3 text-amber-700" />
+                  Benefit Gaps
+                </span>
+                <span className="text-lg font-black font-mono text-amber-950">
+                  {gapCount} Unserved
+                </span>
+                <span className="text-[10px] font-bold text-amber-800 block mt-0.5">
+                  Action Required
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Structured Tabs Bar */}
-        <div className="border-b border-slate-border flex items-center gap-1 overflow-x-auto text-xs">
+        {/* Interactive Government Navigation Tabs */}
+        <div className="bg-white p-1 rounded-xl border border-slate-border shadow-xs flex items-center gap-1.5 overflow-x-auto">
           {[
-            { id: 'overview', label: 'Overview & Kinship' },
-            { id: 'benefits', label: `Benefits & Gaps (${gapCount > 0 ? `${gapCount} Actionable` : 'All Set'})` },
-            { id: 'members', label: `Members (${family.members?.length || 0})` },
-            { id: 'applications', label: `Applications (${applications.length})` },
-            { id: 'identity', label: `Civil Data Sources (${identityRecords.length})` },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 font-semibold transition-all border-b-2 whitespace-nowrap ${
-                activeTab === tab.id
-                  ? 'border-navy text-navy bg-white'
-                  : 'border-transparent text-slate-secondary hover:text-slate-text hover:border-slate-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+            { id: 'overview', label: 'Overview & Kinship Graph', count: null, color: 'bg-navy' },
+            { id: 'benefits', label: 'Benefits & Gaps Matrix', count: gapCount > 0 ? `${gapCount} Gaps` : 'All Set', color: gapCount > 0 ? 'bg-[#FF671F]' : 'bg-emerald-600' },
+            { id: 'members', label: 'Household Members', count: family.members?.length || 0, color: 'bg-blue-600' },
+            { id: 'applications', label: 'Application Workflow', count: applications.length, color: 'bg-purple-600' },
+            { id: 'identity', label: 'Departmental Data Feeds', count: identityRecords.length, color: 'bg-slate-600' },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+                  isActive
+                    ? 'bg-gradient-to-r from-navy to-[#0A2540] text-white shadow-sm border border-navy'
+                    : 'text-slate-600 hover:text-navy hover:bg-slate-100/70'
+                }`}
+              >
+                <span>{tab.label}</span>
+                {tab.count !== null && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                      isActive ? 'bg-white/20 text-[#FFB81C]' : `${tab.color} text-white`
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* TAB 1: Overview & Kinship */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left: Family Profile Details */}
-            <div className="card-dpi p-5 bg-white space-y-4">
-              <div className="border-b border-slate-border pb-3">
-                <h3 className="text-sm font-bold text-slate-text">Family Socio-Economic Attributes</h3>
-                <p className="text-xs text-slate-secondary">Statutory variables used for eligibility determination</p>
+            <div className="card-dpi gov-card-navy p-5 bg-white space-y-4">
+              <div className="border-b border-slate-border pb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-navy">Socio-Economic Attributes</h3>
+                  <p className="text-[11px] text-slate-500">Statutory parameters evaluated against scheme criteria</p>
+                </div>
+                <span className="text-[10px] font-bold font-mono bg-blue-50 text-navy px-2 py-0.5 rounded border border-blue-200">
+                  DPI Verified
+                </span>
               </div>
 
-              <div className="space-y-3 text-xs">
-                <div className="flex justify-between py-1.5 border-b border-slate-100">
-                  <span className="text-slate-secondary">Social Category</span>
-                  <span className="font-semibold text-slate-text bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                  <span className="text-slate-500 font-medium">Social Classification</span>
+                  <span className="font-bold text-navy bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
                     {family.social_category}
                   </span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100">
-                  <span className="text-slate-secondary">Housing Status</span>
-                  <span className="font-semibold text-slate-text">{family.housing_status}</span>
-                </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100">
-                  <span className="text-slate-secondary">Land Holding</span>
-                  <span className="font-mono text-slate-text">
-                    {family.land_holding_acres != null ? `${family.land_holding_acres} Acres` : 'Nil / Landless'}
+                <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                  <span className="text-slate-500 font-medium">Housing Infrastructure</span>
+                  <span className={`font-bold px-2 py-0.5 rounded ${
+                    family.housing_status === 'None' || family.housing_status === 'Rented'
+                      ? 'bg-amber-50 text-amber-900 border border-amber-200'
+                      : 'bg-emerald-50 text-emerald-800'
+                  }`}>
+                    {family.housing_status}
                   </span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-100">
-                  <span className="text-slate-secondary">Civil Registry Creation</span>
-                  <span className="font-mono text-slate-secondary text-[11px]">
-                    {family.created_at ? new Date(family.created_at).toLocaleDateString() : '2026-09-01'}
+                <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                  <span className="text-slate-500 font-medium">Agricultural Land</span>
+                  <span className="font-mono font-semibold text-slate-800">
+                    {family.land_holding_acres != null ? `${family.land_holding_acres} Acres` : 'Nil / Landless Rural Labor'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                  <span className="text-slate-500 font-medium">Taluka / Jurisdiction</span>
+                  <span className="font-semibold text-slate-700">{family.taluka} Taluka, {family.district}</span>
+                </div>
+                <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+                  <span className="text-slate-500 font-medium">PDS Ration Tier</span>
+                  <span className="font-mono text-xs font-bold text-navy">
+                    {family.ration_card_id || 'Not Registered'}
                   </span>
                 </div>
               </div>
 
-              <div className="p-3 rounded bg-blue-50/50 border border-blue-100 text-[11px] text-slate-secondary space-y-1">
-                <span className="font-bold text-navy block">Administrative Note:</span>
-                <p>
-                  Eligibility determinations are computed deterministically per statute. Household economic status is verified against Civil Supplies ration tier records.
+              {/* Administrative Compliance Callout */}
+              <div className="p-3.5 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50/60 border border-blue-200 text-xs space-y-1.5">
+                <div className="flex items-center gap-1.5 text-navy font-bold">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Statutory Entitlement Note</span>
+                </div>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  Household economic parameters are evaluated deterministically by the Family360 rule engine against current Gujarat Social Justice policies. No discretionary decision drift is permitted.
                 </p>
               </div>
             </div>
@@ -242,139 +378,219 @@ export default function OfficerFamilyDetailPage() {
           </div>
         )}
 
-        {/* TAB 2: Benefits & Gaps */}
+        {/* TAB 2: Benefits & Gaps Matrix */}
         {activeTab === 'benefits' && (
           <BenefitGapPanel
             gapReport={gapReport}
             family={family}
-            onApplicationCreated={() => loadData()}
+            onApplicationCreated={() => {
+              showToast('New welfare application created successfully!');
+              loadData();
+            }}
           />
         )}
 
-        {/* TAB 3: Members List */}
+        {/* TAB 3: Members List & Dynamic Member Inspector */}
         {activeTab === 'members' && (
-          <div className="card-dpi bg-white overflow-hidden">
-            <div className="p-4 border-b border-slate-border">
-              <h3 className="text-sm font-bold text-slate-text">Individual Family Members</h3>
-              <p className="text-xs text-slate-secondary">Demographic and occupational data per individual</p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-border text-slate-secondary font-semibold uppercase tracking-wider text-[11px]">
-                    <th className="py-3 px-4">Member ID</th>
-                    <th className="py-3 px-4">Name</th>
-                    <th className="py-3 px-4">Relation</th>
-                    <th className="py-3 px-4">DOB / Gender</th>
-                    <th className="py-3 px-4">Education</th>
-                    <th className="py-3 px-4">Occupation</th>
-                    <th className="py-3 px-4">Markers</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-border">
-                  {family.members?.map((m) => (
-                    <tr key={m.member_id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-3 px-4 font-mono font-semibold text-navy">{m.member_id}</td>
-                      <td className="py-3 px-4 font-semibold text-slate-text">{m.name}</td>
-                      <td className="py-3 px-4 text-slate-600">{m.relation_to_head}</td>
-                      <td className="py-3 px-4 text-slate-600">
-                        {m.dob} ({m.gender})
-                      </td>
-                      <td className="py-3 px-4 text-slate-600">{m.education_level || 'None'}</td>
-                      <td className="py-3 px-4 text-slate-600">{m.occupation || 'Dependent'}</td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-1 flex-wrap">
-                          {m.student_status && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">
-                              Student
-                            </span>
-                          )}
-                          {m.disability_status && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 font-medium">
-                              Disability
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 card-dpi p-5 bg-white border border-slate-border space-y-4">
+              <div className="border-b border-slate-border pb-3 flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-navy">Household Members Directory</h3>
+                  <p className="text-xs text-slate-500">Click any individual to inspect linked cross-registry data</p>
+                </div>
+                <span className="text-xs font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-700">
+                  {family.members?.length} Registered
+                </span>
+              </div>
 
-        {/* TAB 4: Applications Workflow */}
-        {activeTab === 'applications' && (
-          <div className="card-dpi bg-white overflow-hidden space-y-4">
-            <div className="p-4 border-b border-slate-border flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-slate-text">In-Flight Scheme Applications</h3>
-                <p className="text-xs text-slate-secondary">Administrative workflow and SLA verification stage</p>
+              <div className="space-y-2.5">
+                {family.members?.map((m) => {
+                  const isSelected = selectedMember?.member_id === m.member_id;
+                  const isHead = m.relation_to_head === 'Head';
+                  return (
+                    <div
+                      key={m.member_id}
+                      onClick={() => setSelectedMember(m)}
+                      className={`p-3.5 rounded-lg border-2 cursor-pointer transition-all flex flex-wrap items-center justify-between gap-3 ${
+                        isSelected
+                          ? 'border-[#FF671F] bg-orange-50/40 shadow-sm'
+                          : 'border-slate-border hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                          isHead ? 'bg-navy text-white' : 'bg-blue-100 text-navy'
+                        }`}>
+                          {m.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-xs font-bold text-slate-900">{m.name}</h4>
+                            <span className={`text-[10px] font-bold px-2 py-0.2 rounded-full ${
+                              isHead ? 'bg-navy text-white' : 'bg-slate-200 text-slate-800'
+                            }`}>
+                              {m.relation_to_head}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                            DOB: {m.dob} · Gender: {m.gender} · {m.education_level || 'No formal schooling'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {m.student_status && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+                            Student (Scholarship Eligible)
+                          </span>
+                        )}
+                        {m.disability_status && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                            Divyang / Disability
+                          </span>
+                        )}
+                        {m.occupation && (
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                            {m.occupation}
+                          </span>
+                        )}
+                        <span className="font-mono text-xs font-bold text-navy pl-2">{m.member_id}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
+            {/* Right: Selected Member Inspector Card */}
+            {selectedMember && (
+              <div className="card-dpi gov-card-saffron p-5 bg-white border border-slate-border space-y-4">
+                <div className="border-b border-slate-border pb-3">
+                  <span className="text-[10px] font-mono font-bold text-[#FF671F] uppercase tracking-wider block">
+                    Individual Beneficiary Focus
+                  </span>
+                  <h3 className="text-base font-bold text-navy">{selectedMember.name}</h3>
+                  <p className="text-xs text-slate-500">ID: {selectedMember.member_id}</p>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Relationship to Head</span>
+                    <span className="font-bold text-slate-800">{selectedMember.relation_to_head}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Date of Birth</span>
+                    <span className="font-mono font-medium text-slate-800">{selectedMember.dob}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Education Level</span>
+                    <span className="font-bold text-navy">{selectedMember.education_level || 'None'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Occupation</span>
+                    <span className="font-medium text-slate-800">{selectedMember.occupation || 'Dependent'}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Student Status</span>
+                    <span className="font-bold text-emerald-700">{selectedMember.student_status ? 'Active Student' : 'No'}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => {
+                      setActiveTab('benefits');
+                      showToast(`Evaluating targeted schemes for ${selectedMember.name}`);
+                    }}
+                    className="w-full py-2 bg-navy text-white text-xs font-bold rounded-lg hover:bg-navy-dark transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    <span>Check Individual Schemes</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-[#FFB81C]" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: In-Flight Scheme Applications */}
+        {activeTab === 'applications' && (
+          <div className="card-dpi gov-card-navy p-5 bg-white border border-slate-border space-y-4">
+            <div className="border-b border-slate-border pb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-navy">Administrative Entitlement Applications</h3>
+                <p className="text-xs text-slate-500">Officer verification workflow & Direct Benefit Transfer tracking</p>
+              </div>
+              <button
+                onClick={() => setActiveTab('benefits')}
+                className="text-xs font-bold text-[#FF671F] hover:underline"
+              >
+                + Apply for New Scheme
+              </button>
+            </div>
+
             {applications.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-secondary">
-                <FileText className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="font-semibold text-slate-text">No Applications Currently Active</p>
+              <div className="p-8 text-center text-xs text-slate-500 bg-slate-50 rounded-lg border border-slate-200">
+                <FileText className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                <p className="font-bold text-slate-700 text-sm">No Applications Active for This Family</p>
                 <p className="mt-1">
-                  Citizen or field officer can initiate an application from the "Benefits & Gaps" tab.
+                  You can submit an assisted application from the <strong>"Benefits & Gaps Matrix"</strong> tab.
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-border text-slate-secondary font-semibold uppercase tracking-wider text-[11px]">
+                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
                       <th className="py-3 px-4">Application ID</th>
-                      <th className="py-3 px-4">Scheme</th>
-                      <th className="py-3 px-4">Applicant Member</th>
-                      <th className="py-3 px-4">Submitted At</th>
-                      <th className="py-3 px-4">Current Status</th>
+                      <th className="py-3 px-4">Scheme Code</th>
+                      <th className="py-3 px-4">Applicant</th>
+                      <th className="py-3 px-4">Submitted Date</th>
+                      <th className="py-3 px-4">Workflow Status</th>
                       <th className="py-3 px-4 text-right">Officer Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-border">
                     {applications.map((app) => (
-                      <tr key={app.application_id} className="hover:bg-slate-50 transition-colors">
-                        <td className="py-3 px-4 font-mono font-semibold text-navy">{app.application_id}</td>
-                        <td className="py-3 px-4 font-medium text-slate-text">{app.scheme_id}</td>
-                        <td className="py-3 px-4 font-mono text-slate-600">{app.member_id}</td>
-                        <td className="py-3 px-4 text-slate-secondary">
+                      <tr key={app.application_id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3.5 px-4 font-mono font-bold text-navy">{app.application_id}</td>
+                        <td className="py-3.5 px-4 font-bold text-slate-800">{app.scheme_id}</td>
+                        <td className="py-3.5 px-4 font-mono text-slate-600">{app.member_id}</td>
+                        <td className="py-3.5 px-4 text-slate-500">
                           {app.submitted_at ? new Date(app.submitted_at).toLocaleDateString() : 'Recent'}
                         </td>
-                        <td className="py-3 px-4">
-                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded border ${
+                        <td className="py-3.5 px-4">
+                          <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
                             app.status === 'APPROVED'
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
                               : app.status === 'REJECTED'
-                              ? 'bg-rose-50 text-rose-800 border-rose-200'
-                              : 'bg-amber-50 text-amber-800 border-amber-200'
+                              ? 'bg-rose-100 text-rose-900 border-rose-300'
+                              : 'bg-amber-100 text-amber-950 border-amber-300'
                           }`}>
                             {app.status}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3.5 px-4 text-right">
                           {app.status !== 'APPROVED' && app.status !== 'REJECTED' ? (
-                            <div className="flex items-center justify-end gap-1.5">
+                            <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={() => handleUpdateApplication(app.application_id, 'APPROVED')}
                                 disabled={updatingAppId === app.application_id}
-                                className="px-2.5 py-1 text-[11px] font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded transition-colors"
+                                className="px-3 py-1 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded transition-colors shadow-xs"
                               >
                                 Approve
                               </button>
                               <button
                                 onClick={() => handleUpdateApplication(app.application_id, 'REJECTED')}
                                 disabled={updatingAppId === app.application_id}
-                                className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded border border-rose-200 transition-colors"
+                                className="px-3 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded transition-colors"
                               >
                                 Reject
                               </button>
                             </div>
                           ) : (
-                            <span className="text-[11px] text-slate-400">Processed</span>
+                            <span className="text-[11px] font-bold text-slate-400">Decision Logged</span>
                           )}
                         </td>
                       </tr>
@@ -386,42 +602,71 @@ export default function OfficerFamilyDetailPage() {
           </div>
         )}
 
-        {/* TAB 5: Data Sources & Identity Reconciliation */}
+        {/* TAB 5: Data Sources & Departmental Footprints */}
         {activeTab === 'identity' && (
-          <div className="card-dpi bg-white p-5 space-y-4">
-            <div className="border-b border-slate-border pb-3">
-              <h3 className="text-sm font-bold text-slate-text flex items-center gap-2">
-                <Database className="w-4 h-4 text-navy" />
-                Line-Department Identity Feeds
-              </h3>
-              <p className="text-xs text-slate-secondary">
-                Records ingested from Ration, Scholarship, Housing, and Health databases feeding entity resolution
-              </p>
+          <div className="card-dpi gov-card-saffron p-5 bg-white border border-slate-border space-y-4">
+            <div className="border-b border-slate-border pb-3 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-navy flex items-center gap-2">
+                  <Database className="w-4 h-4 text-[#FF671F]" />
+                  <span>Line-Department Civil Identity Footprints</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Raw identity records ingested from Ration, Scholarship, Housing, and Health MIS registries feeding Entity Resolution
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold bg-blue-50 text-navy px-2.5 py-1 rounded border border-blue-200">
+                {identityRecords.length} Cross-System Records
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {identityRecords.map((rec) => (
-                <div key={rec.record_id} className="p-3 rounded border border-slate-border bg-slate-50 text-xs space-y-1">
-                  <div className="flex items-center justify-between pb-1 border-b border-slate-200">
-                    <span className="font-bold text-navy uppercase text-[10px]">
-                      Source: {rec.source_system}
-                    </span>
-                    <span className="font-mono text-slate-400 text-[10px]">{rec.record_id}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {identityRecords.map((rec) => {
+                const sysColors = {
+                  ration: 'border-blue-400 bg-blue-50/50 text-blue-900',
+                  scholarship: 'border-purple-400 bg-purple-50/50 text-purple-900',
+                  housing: 'border-amber-400 bg-amber-50/50 text-amber-900',
+                  health: 'border-emerald-400 bg-emerald-50/50 text-emerald-900',
+                };
+                const colorCls = sysColors[rec.source_system?.toLowerCase()] || 'border-slate-300 bg-slate-50 text-slate-800';
+
+                return (
+                  <div key={rec.record_id} className={`p-4 rounded-lg border-2 bg-white shadow-xs space-y-2`}>
+                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                      <span className={`text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${colorCls}`}>
+                        {rec.source_system} MIS
+                      </span>
+                      <span className="font-mono text-slate-400 text-xs font-bold">{rec.record_id}</span>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Recorded Civil Name</span>
+                      <span className="text-sm font-bold text-navy">{rec.name_as_recorded}</span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-xs pt-1 border-t border-slate-100 text-slate-600 font-medium">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">DOB</span>
+                        <span>{rec.dob}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">Gender</span>
+                        <span>{rec.gender}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">Village</span>
+                        <span className="truncate">{rec.village}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-slate-400 text-[10px] block">Recorded Name</span>
-                    <span className="font-semibold text-slate-text">{rec.name_as_recorded}</span>
-                  </div>
-                  <div className="flex justify-between text-[11px] text-slate-600">
-                    <span>DOB: {rec.dob}</span>
-                    <span>Gender: {rec.gender}</span>
-                    <span>Village: {rec.village}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
+
+        {/* Slide-over Assistant Drawer */}
+        <AssistantDrawer isOpen={assistantOpen} onClose={() => setAssistantOpen(false)} />
       </div>
     </OfficerLayout>
   );
