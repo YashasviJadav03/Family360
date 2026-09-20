@@ -23,7 +23,7 @@ export default function OfficerLayout({ children }) {
   ];
 
   const toggleLanguage = () => {
-    setLang((prev) => (prev === 'en' ? 'gu' : 'en'));
+    setLang((prev) => (prev === 'en' ? 'hi' : prev === 'hi' ? 'gu' : 'en'));
   };
 
   return (
@@ -32,6 +32,7 @@ export default function OfficerLayout({ children }) {
       <NationalGovHeader
         lang={lang}
         onToggleLang={toggleLanguage}
+        onSelectLang={(code) => setLang(code)}
         currentRole="officer"
       />
 
@@ -48,7 +49,11 @@ export default function OfficerLayout({ children }) {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span className="font-semibold text-xs tracking-tight">
-              {lang === 'en' ? 'District Welfare Officer Console' : 'જિલ્લા સમાજ કલ્યાણ અધિકારી કન્સોલ'}
+              {lang === 'en'
+                ? 'District Welfare Officer Console'
+                : lang === 'hi'
+                ? 'जिला समाज कल्याण अधिकारी कंसोल'
+                : 'જિલ્લા સમાજ કલ્યાણ અધિકારી કન્સોલ'}
             </span>
             <span className="text-slate-400 text-xs hidden md:inline">· Ahmedabad Jurisdiction</span>
           </div>
