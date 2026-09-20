@@ -1,0 +1,12 @@
+# Phase 0.5 — Rapid Vertical Slice Spike Log
+- **Date**: 2026-09-20
+- **Duration**: ~20 minutes (well under the 90-minute timebox)
+- **Objective**: Validate the core end-to-end loop (Browser / Client &rarr; FastAPI ASGI &rarr; Deterministic Rule Evaluator &rarr; JSON Benefit Gap Response &rarr; UI Rendering) before building the full database, ORM, and multi-scheme engine.
+- **What Was Tested**:
+  - Implemented throwaway `/spike/eligibility-demo` with a representative 2-member Gujarat family (`GJ-F000001`, head age 64, income ₹1,20,000) and Old Age Pension rules (`age >= 60`, `income <= 200000`).
+  - Created unstyled `frontend/spike.html` with asynchronous `fetch` displaying rule-by-rule status (pass/fail checkmarks) and amber benefit gap alert.
+- **Key Learnings & Validated Assumptions**:
+  - *Validated*: FastAPI's ASGI response latency (<10ms) and simple rule-dictionary structures are lightweight and allow instant feedback loops.
+  - *Validated*: Rule evaluations must expose *why* a rule passed/failed (attribute, operator, threshold, actual value) alongside the boolean `is_eligible`, because explaining the rule to a citizen or officer requires granular audit trails.
+  - *Validated*: Separating the rule engine from any LLM/generative logic is completely feasible and provides deterministic, instant results that can later be fed cleanly into an LLM explainer in Phase 6.
+- **Code Disposal Plan**: Spike endpoint in `backend/app/main.py` is clearly tagged `# SPIKE — DELETE OR RETIRE BEFORE PHASE 3`.

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family360 — Phase 0.5 Rapid Spike</title>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 2rem; background: #f8fafc; color: #0f172a; }
+        .card { background: white; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; max-width: 650px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; font-size: 0.85rem; }
+        .badge-amber { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        pre { background: #f1f5f9; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.9rem; }
+        button { background: #0284c7; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        button:hover { background: #0369a1; }
+    </style>
+</head>
+<body>
+    <!-- SPIKE: Rapid vertical-slice validation. Plain HTML + Fetch -->
+    <div class="card">
+        <h2>Family360 — Rapid Vertical Slice Spike (Phase 0.5)</h2>
+        <p>Testing end-to-end loop: <strong>Browser &rarr; FastAPI &rarr; Rule Evaluation &rarr; Gap Rendered</strong></p>
+        <button id="runBtn" onclick="runSpike()">Run Eligibility Check</button>
+        <div id="output" style="margin-top: 1.5rem;">
+            <em>Click the button above to test the API endpoint...</em>
+        </div>
+    </div>
+
+    <script>
+        async function runSpike() {
+            const out = document.getElementById('output');
+            out.innerHTML = '<p>Querying backend API (http://localhost:8000/spike/eligibility-demo)...</p>';
+            try {
+                const res = await fetch('http://localhost:8000/spike/eligibility-demo');
+                if (!res.ok) throw new Error('HTTP status ' + res.status);
+                const data = await res.json();
+                out.innerHTML = `
+                    <div style="border-left: 4px solid #f59e0b; padding-left: 1rem; margin-bottom: 1rem;">
+                        <span class="badge badge-amber">BENEFIT GAP DETECTED</span>
+                        <h3 style="margin: 0.5rem 0 0.25rem 0;">${data.scheme.name}</h3>
+                        <p style="margin: 0; color: #475569;">Family: <strong>${data.family.family_id}</strong> (${data.family.district}) &bull; Qualifying: ${data.family.qualifying_member}</p>
+                    </div>
+                    <h4>Rule Evaluation Result:</h4>
+                    <ul>
+                        ${data.evaluation.rules_checked.map(r => `<li>Rule <code>${r.attribute} ${r.operator} ${r.threshold}</code>: Actual <strong>${r.actual}</strong> &rarr; <span style="color: ${r.passed ? 'green' : 'red'}; font-weight: bold;">${r.passed ? 'PASSED (✓)' : 'FAILED (✗)'}</span></li>`).join('')}
+                    </ul>
+                    <p><strong>Eligibility:</strong> ${data.evaluation.is_eligible ? 'ELIGIBLE' : 'NOT ELIGIBLE'}</p>
+                    <p><strong>Message:</strong> ${data.evaluation.message}</p>
+                    <details>
+                        <summary style="cursor: pointer; color: #0284c7;">View Raw API Payload</summary>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </details>
+                `;
+            } catch (err) {
+                out.innerHTML = `<p style="color: red;">Error contacting API: ${err.message}. Ensure backend is running on port 8000.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
