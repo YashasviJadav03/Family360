@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { X, CheckCircle2, AlertTriangle, ExternalLink, Send, FileText, Building2, Tag, ShieldCheck } from 'lucide-react';
-import { applicationApi } from '../api/client';
+import React, { useState, useEffect } from 'react';
+import { X, CheckCircle2, AlertTriangle, ExternalLink, Send, FileText, Building2, Tag, ShieldCheck, Bot, Sparkles } from 'lucide-react';
+import { applicationApi, familyApi } from '../api/client';
 
 export default function EligibilityExplainer({
   scheme,
@@ -12,6 +12,21 @@ export default function EligibilityExplainer({
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [assignedMemberId, setAssignedMemberId] = useState(family?.members?.[0]?.member_id || null);
+  const [explanation, setExplanation] = useState(null);
+  const [explLoading, setExplLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && family?.family_id && scheme?.scheme_id) {
+      setExplLoading(true);
+      familyApi.getExplanation(family.family_id, scheme.scheme_id)
+        .then((res) => setExplanation(res.explanation))
+        .catch((err) => {
+          console.error("Failed to load explanation:", err);
+          setExplanation(null);
+        })
+        .finally(() => setExplLoading(false));
+    }
+  }, [isOpen, family?.family_id, scheme?.scheme_id]);
 
   if (!isOpen || !scheme) return null;
 
@@ -76,17 +91,29 @@ export default function EligibilityExplainer({
             <p className="text-sm font-medium text-navy">{scheme.benefit}</p>
           </div>
 
-          {/* Explanation Rationale */}
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <ShieldCheck className="w-4 h-4 text-navy" />
-              <h4 className="text-sm font-semibold text-slate-text">
-                Deterministic Eligibility Determination
-              </h4>
+          {/* Explanation Rationale & AI Phrasing Layer */}
+          <div className="space-y-3">
+            <div className="rounded-lg bg-blue-50/70 border border-blue-200 p-3.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-navy flex items-center gap-1.5">
+                  <Bot className="w-4 h-4 text-orange" />
+                  Administrative Memo (AI Plain-Language Synthesis)
+                </span>
+                <span className="text-[10px] font-semibold bg-white text-navy px-2 py-0.5 rounded border border-blue-200 font-mono">
+                  Rule Engine Decides · LLM Explains
+                </span>
+              </div>
+              {explLoading ? (
+                <div className="flex items-center gap-2 text-xs text-slate-500 py-1">
+                  <div className="w-3.5 h-3.5 border-2 border-navy border-t-transparent rounded-full animate-spin"></div>
+                  <span>Synthesizing plain-language administrative explanation...</span>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-700 leading-relaxed font-sans">
+                  {explanation || "Evaluated deterministically by the Family360 rule engine against current family economic and demographic attributes."}
+                </p>
+              )}
             </div>
-            <p className="text-xs text-slate-secondary leading-relaxed bg-blue-50/50 p-3 rounded border border-blue-100">
-              Evaluated deterministically by the Family360 rule engine against current family economic profile, social category, and individual member demographic records.
-            </p>
           </div>
 
           {/* Matched Rules */}

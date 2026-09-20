@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Bot, Sparkles, Send, ArrowRight, Database, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { assistantApi } from '../api/client';
 
 export default function AssistantDrawer({ isOpen, onClose }) {
   const [messages, setMessages] = useState([
@@ -11,19 +12,20 @@ export default function AssistantDrawer({ isOpen, onClose }) {
     },
   ]);
   const [inputQuery, setInputQuery] = useState('');
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
   const sampleQueries = [
-    'Why is family GJ-F000001 flagged with benefit gaps?',
-    'Which schemes have the highest eligible-unclaimed numbers?',
-    'Show candidate duplicate records requiring review',
+    'Which families in Ahmedabad have the most benefit gaps?',
+    'Why is family GJ-F000012 potentially eligible for housing assistance?',
+    'How many possible duplicate records are unresolved?',
     'What are the eligibility criteria for Ambedkar Awas Yojana?',
   ];
 
-  const handleSend = (queryText) => {
-    const q = queryText || inputQuery;
-    if (!q.trim()) return;
+  const handleSend = async (queryText) => {
+    const q = (queryText || inputQuery).trim();
+    if (!q || loading) return;
 
     const userMsg = {
       sender: 'user',
@@ -33,43 +35,28 @@ export default function AssistantDrawer({ isOpen, onClose }) {
 
     setMessages((prev) => [...prev, userMsg]);
     setInputQuery('');
+    setLoading(true);
 
-    // Generate accurate, data-backed enterprise response
-    setTimeout(() => {
-      let reply = '';
-      let links = null;
-
-      const lower = q.toLowerCase();
-      if (lower.includes('gj-f000001') || lower.includes('flagged')) {
-        reply =
-          'Analysis for Family GJ-F000001: The household has 5 members in Anand district with an annual income of ₹1,43,000 and SC social category. While receiving Pre-Matric SC Scholarship, the family is eligible for Ambedkar Awas Yojana (Housing) but has not applied, creating 1 potential benefit gap.';
-        links = [{ label: 'Inspect Family 360 Record', url: '/officer/families/GJ-F000001' }];
-      } else if (lower.includes('largest') || lower.includes('highest') || lower.includes('gap')) {
-        reply =
-          'Across the 3,000 registered families in Gujarat, Ambedkar Awas Yojana (Housing) and Pre-Matric Scholarship exhibit the largest absolute benefit gaps, with over 1,280 and 2,340 qualified households eligible for direct assistance.';
-        links = [{ label: 'View District Overview', url: '/officer/dashboard' }];
-      } else if (lower.includes('duplicate') || lower.includes('reconcil')) {
-        reply =
-          'There are currently 3,356 candidate duplicate pairs detected across Civil Supplies, Scholarships, and Health registries. The blocking engine pruned 99.3% of comparisons, isolating high-confidence name and DOB matches.';
-        links = [{ label: 'Open Review Queue', url: '/officer/duplicates' }];
-      } else if (lower.includes('ambedkar') || lower.includes('awas') || lower.includes('rules')) {
-        reply =
-          'Dr. Ambedkar Awas Yojana (SCH003) requires: Annual Income <= ₹2,00,000, Social Category IN [SC, ST, SEBC], Housing Status = None or Kucha, and applicant must not have received prior housing subsidy.';
-        links = [{ label: 'Browse Scheme Rules', url: '/officer/schemes' }];
-      } else {
-        reply =
-          `Deterministic query evaluation completed: Evaluated "${q}" against the 3,000 family registry and 11 statutory scheme rules. No system anomalies found.`;
-      }
-
+    try {
+      const res = await assistantApi.query(q);
       const assistantMsg = {
         sender: 'assistant',
-        text: reply,
-        links,
+        text: res.answer,
+        links: res.suggested_links,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
-
       setMessages((prev) => [...prev, assistantMsg]);
-    }, 400);
+    } catch (err) {
+      console.error('Drawer query error:', err);
+      const errorMsg = {
+        sender: 'assistant',
+        text: 'Error contacting the assistant service. Please verify backend connectivity.',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      setMessages((prev) => [...prev, errorMsg]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

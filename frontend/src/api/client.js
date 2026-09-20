@@ -29,6 +29,7 @@ export const familyApi = {
   getFamilyById: (familyId) => api.get(`/families/${familyId}`).then((r) => r.data),
   getEligibility: (familyId) => api.get(`/families/${familyId}/eligibility`).then((r) => r.data),
   getBenefitGap: (familyId) => api.get(`/families/${familyId}/benefit-gap`).then((r) => r.data),
+  getExplanation: (familyId, schemeId) => api.get(`/families/${familyId}/schemes/${schemeId}/explain`).then((r) => r.data),
 };
 
 export const schemeApi = {
@@ -38,6 +39,7 @@ export const schemeApi = {
 
 export const dashboardApi = {
   getDistrictSummary: () => api.get('/dashboard/district-summary').then((r) => r.data),
+  getDataQuality: () => api.get('/dashboard/data-quality').then((r) => r.data),
 };
 
 export const officerApi = {
@@ -53,6 +55,10 @@ export const duplicateApi = {
   getDuplicates: (params) => api.get('/duplicates', { params }).then((r) => r.data),
   getDuplicateDetail: (r1, r2) => api.get(`/duplicates/${r1}/${r2}`).then((r) => r.data),
   resolveDuplicate: (r1, r2, payload) => api.patch(`/duplicates/${r1}/${r2}/resolve`, payload).then((r) => r.data),
+};
+
+export const assistantApi = {
+  query: (question) => api.post('/assistant/query', { question }).then((r) => r.data),
 };
 
 export default api;

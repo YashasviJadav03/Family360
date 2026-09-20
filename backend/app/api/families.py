@@ -23,6 +23,7 @@ router = APIRouter(prefix="/families", tags=["Families"])
 def list_families(
     district: str | None = Query(None, description="Filter by district name"),
     category: str | None = Query(None, description="Filter by social category (SC, ST, OBC, General, SEBC)"),
+    social_category: str | None = Query(None, description="Alias for category filter"),
     has_gap: bool | None = Query(None, description="Filter for families with at least 1 unclaimed benefit gap"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -30,17 +31,20 @@ def list_families(
 ):
     query = db.query(Family)
 
-    if district:
+    if district and isinstance(district, str):
         query = query.filter(Family.district == district)
-    if category:
-        query = query.filter(Family.social_category == category)
+    
+    cat_filter = category if isinstance(category, str) else (social_category if isinstance(social_category, str) else None)
+    if cat_filter:
+        query = query.filter(Family.social_category == cat_filter)
 
-    if has_gap is not None:
+    if isinstance(has_gap, bool):
         # Families that have at least one NOT_APPLIED benefit
         gap_subquery = (
             db.query(Benefit.family_id)
             .filter(Benefit.status == "NOT_APPLIED")
             .distinct()
+            .scalar_subquery()
         )
         if has_gap:
             query = query.filter(Family.family_id.in_(gap_subquery))
@@ -128,3 +132,44 @@ def get_family_eligibility(family_id: str, db: Session = Depends(get_db)):
 )
 def get_family_benefit_gap(family_id: str, db: Session = Depends(get_db)):
     return compute_benefit_gap(family_id, db)
+
+
+@router.get(
+    "/{family_id}/schemes/{scheme_id}/explain",
+    summary="Generate Plain-Language Eligibility Explanation",
+    description="Explain deterministic eligibility determination for a specific scheme in plain, respectful language for government officers without LLM decision autonomy.",
+)
+def explain_family_scheme_eligibility(
+    family_id: str,
+    scheme_id: str,
+    db: Session = Depends(get_db)
+):
+    from app.models.scheme import Scheme
+    from app.services.explanation_service import generate_gap_explanation
+
+    family = db.query(Family).filter(Family.family_id == family_id).first()
+    if not family:
+        raise HTTPException(status_code=404, detail=f"Family '{family_id}' not found")
+
+    scheme = db.query(Scheme).filter(Scheme.scheme_id == scheme_id).first()
+    if not scheme:
+        raise HTTPException(status_code=404, detail=f"Scheme '{scheme_id}' not found")
+
+    all_rules = db.query(EligibilityRule).filter(EligibilityRule.scheme_id == scheme_id).all()
+    eval_results = evaluate_eligibility(family, family.members, all_rules)
+    result = eval_results.get(scheme_id)
+
+    if not result:
+        raise HTTPException(status_code=500, detail="Evaluation failed for scheme")
+
+    explanation = generate_gap_explanation(family, scheme, result)
+    return {
+        "family_id": family_id,
+        "scheme_id": scheme_id,
+        "scheme_name": scheme.scheme_name,
+        "is_eligible": result.is_eligible,
+        "matched_rules_count": len(result.matched_rules),
+        "failed_rules_count": len(result.failed_rules),
+        "explanation": explanation,
+    }
+
