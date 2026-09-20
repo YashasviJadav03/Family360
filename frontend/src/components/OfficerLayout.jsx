@@ -2,15 +2,17 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Award, FileCheck, BookOpen, Bot,
-  LogOut, Shield, Globe, Bell, ChevronRight, Menu, X, ExternalLink, MapPin
+  LogOut, Shield, Globe, Bell, ChevronRight, Menu, X, ExternalLink, MapPin, RefreshCw
 } from 'lucide-react';
 import NationalGovHeader from './NationalGovHeader';
 import NationalGovFooter from './NationalGovFooter';
 import AssistantDrawer from './AssistantDrawer';
+import { useAuth, DEMO_PERSONAS } from '../context/AuthContext';
 
 export default function OfficerLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, logout, switchRole } = useAuth();
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [lang, setLang] = useState('en');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -50,13 +52,11 @@ export default function OfficerLayout({ children }) {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span className="font-semibold text-xs tracking-tight">
-              {lang === 'en'
-                ? 'District Welfare Officer Console'
-                : lang === 'hi'
-                ? 'जिला समाज कल्याण अधिकारी कंसोल'
-                : 'જિલ્લા સમાજ કલ્યાણ અધિકારી કન્સોલ'}
+              {user?.roleLabel || 'Government Administrative Console'}
             </span>
-            <span className="text-slate-400 text-xs hidden md:inline">· Ahmedabad Jurisdiction</span>
+            <span className="text-slate-400 text-xs hidden md:inline">
+              · {user?.jurisdiction || 'Gujarat Jurisdiction'}
+            </span>
           </div>
         </div>
 
@@ -70,18 +70,24 @@ export default function OfficerLayout({ children }) {
             <span>AI Explainer</span>
           </button>
 
-          {/* Officer Identity */}
+          {/* Officer Identity & RBAC Actions */}
           <div className="flex items-center gap-2 pl-3 border-l border-white/20">
             <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center font-bold text-[10px] text-white">
-              DWO
+              {user?.avatar || 'OFF'}
             </div>
-            <span className="hidden sm:inline font-medium text-slate-200">Shri R. K. Patel</span>
+            <span className="hidden sm:inline font-medium text-slate-200">
+              {user?.name || 'Officer'}
+            </span>
             <button
-              onClick={() => navigate('/')}
-              title="Logout / Switch Portal"
-              className="text-slate-400 hover:text-white p-1 rounded hover:bg-white/10"
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+              title="Logout from Administrative Console"
+              className="text-slate-400 hover:text-white p-1 rounded hover:bg-white/10 transition-colors flex items-center gap-1"
             >
               <LogOut className="w-3.5 h-3.5" />
+              <span className="text-[10px] hidden lg:inline">Logout</span>
             </button>
           </div>
         </div>

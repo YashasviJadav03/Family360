@@ -11,6 +11,8 @@ import FamilyGraph from '../components/FamilyGraph';
 import BenefitGapPanel from '../components/BenefitGapPanel';
 import AssistantDrawer from '../components/AssistantDrawer';
 import WelfareDossierModal from '../components/WelfareDossierModal';
+import LifeEventSimulator from '../components/LifeEventSimulator';
+import SmartFamilyCardModal from '../components/SmartFamilyCardModal';
 import { familyApi, applicationApi } from '../api/client';
 
 export default function OfficerFamilyDetailPage() {
@@ -24,6 +26,9 @@ export default function OfficerFamilyDetailPage() {
   const [copied, setCopied] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [dossierOpen, setDossierOpen] = useState(false);
+  const [simulatorOpen, setSimulatorOpen] = useState(false);
+  const [simMemberId, setSimMemberId] = useState(null);
+  const [smartCardOpen, setSmartCardOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   const showToast = (msg) => {
@@ -159,6 +164,28 @@ export default function OfficerFamilyDetailPage() {
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
               <span>Civil Identity Verified</span>
             </span>
+
+            {/* Life Event Simulator Trigger */}
+            <button
+              onClick={() => {
+                setSimMemberId(null);
+                setSimulatorOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-navy hover:bg-navy-dark text-white shadow-xs transition-colors"
+              title="Simulate life transitions & evaluate 20 declarative welfare schemes"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <span>Life Event Simulator</span>
+            </button>
+
+            {/* Smart Card & NFSA Trigger */}
+            <button
+              onClick={() => setSmartCardOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 border border-amber-300 text-slate-900 transition-colors shadow-xs"
+              title="View Digital Smart Card and calculate NFSA monthly grain quota"
+            >
+              <span>Smart Card & NFSA</span>
+            </button>
 
             <button
               onClick={() => setDossierOpen(true)}
@@ -367,8 +394,13 @@ export default function OfficerFamilyDetailPage() {
             <div className="lg:col-span-2">
               <FamilyGraph
                 members={family.members || []}
+                family={family}
                 selectedMemberId={selectedMember?.member_id}
                 onSelectMember={(m) => setSelectedMember(m)}
+                onLaunchSimulator={(mId) => {
+                  setSimMemberId(mId);
+                  setSimulatorOpen(true);
+                }}
               />
             </div>
           </div>
@@ -672,6 +704,29 @@ export default function OfficerFamilyDetailPage() {
           gapReport={gapReport}
           mode="officer"
         />
+
+        {/* Proactive Life Event Simulator Modal */}
+        {simulatorOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/80 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
+            <div className="max-w-5xl w-full my-6">
+              <LifeEventSimulator
+                family={family}
+                members={family.members || []}
+                preselectedMemberId={simMemberId}
+                onClose={() => setSimulatorOpen(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Digital Smart Family Card & NFSA Foodgrain Modal */}
+        {smartCardOpen && (
+          <SmartFamilyCardModal
+            family={family}
+            members={family.members || []}
+            onClose={() => setSmartCardOpen(false)}
+          />
+        )}
       </div>
     </OfficerLayout>
   );

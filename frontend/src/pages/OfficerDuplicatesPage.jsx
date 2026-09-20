@@ -112,34 +112,101 @@ export default function OfficerDuplicatesPage() {
             </div>
           </div>
 
-          {/* Granular Filters */}
-          <div className="flex flex-wrap items-center gap-3 pt-2 text-xs">
-            <div className="flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-slate-400" />
-              <span className="font-semibold text-slate-700">Filter By:</span>
+          {/* Granular Filters & Multi-Signal Tuning Toggle */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs border-t border-slate-border">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-slate-400" />
+                <span className="font-semibold text-slate-700">Filter By:</span>
+              </div>
+
+              <select
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
+                className="px-2.5 py-1.5 border border-slate-border rounded bg-slate-50 text-slate-text focus:outline-none focus:border-navy"
+              >
+                <option value="">All Districts (10)</option>
+                {districts.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+
+              <div className="flex items-center gap-2">
+                <span className="text-slate-secondary text-xs">Confidence Threshold:</span>
+                <input
+                  type="range"
+                  min="40"
+                  max="90"
+                  step="5"
+                  value={Math.round(minScore * 100)}
+                  onChange={(e) => setMinScore(Number(e.target.value) / 100)}
+                  className="w-28 accent-navy"
+                />
+                <span className="font-mono font-bold text-navy text-xs">≥ {Math.round(minScore * 100)}%</span>
+              </div>
             </div>
 
-            <select
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              className="px-2.5 py-1.5 border border-slate-border rounded bg-slate-50 text-slate-text focus:outline-none focus:border-navy"
-            >
-              <option value="">All Districts (10)</option>
-              {districts.map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
+            <span className="text-[11px] font-mono text-slate-500">
+              Model: 100-Point Composite Probabilistic Linkage (GIGW 3.0)
+            </span>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-slate-secondary text-xs">Min Confidence:</span>
-              <select
-                value={minScore}
-                onChange={(e) => setMinScore(parseFloat(e.target.value))}
-                className="px-2.5 py-1.5 border border-slate-border rounded bg-slate-50 text-slate-text focus:outline-none focus:border-navy font-mono"
-              >
-                <option value={0.85}>Likely Duplicates (≥ 85%)</option>
-                <option value={0.65}>All Needs Review (≥ 65%)</option>
-              </select>
+          {/* 100-Point Multi-Signal Weight Calibration Strip */}
+          <div className="p-3.5 rounded-lg bg-navy/5 border border-navy/15 space-y-2.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-navy flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#FF671F]" />
+                <span>Multi-Signal Similarity Scoring Pipeline (100-Point Model):</span>
+              </span>
+              <span className="text-[10px] text-slate-500 font-mono">
+                Total Allocated: <strong className="text-navy">100 / 100 Pts</strong>
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="p-2 rounded bg-white border border-slate-200 shadow-xs">
+                <div className="flex justify-between text-[11px] text-slate-600">
+                  <span>Name Similarity:</span>
+                  <span className="font-mono font-bold text-navy">20 Pts</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full mt-1.5 overflow-hidden">
+                  <div className="h-full bg-blue-600 rounded-full" style={{ width: '20%' }}></div>
+                </div>
+                <span className="text-[9px] text-slate-400 mt-1 block">Dice + Normalized Levenshtein</span>
+              </div>
+
+              <div className="p-2 rounded bg-white border border-slate-200 shadow-xs">
+                <div className="flex justify-between text-[11px] text-slate-600">
+                  <span>Address & PIN:</span>
+                  <span className="font-mono font-bold text-navy">10 Pts</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full mt-1.5 overflow-hidden">
+                  <div className="h-full bg-amber-500 rounded-full" style={{ width: '10%' }}></div>
+                </div>
+                <span className="text-[9px] text-slate-400 mt-1 block">Normalized Street & Locality</span>
+              </div>
+
+              <div className="p-2 rounded bg-white border border-slate-200 shadow-xs">
+                <div className="flex justify-between text-[11px] text-slate-600">
+                  <span>DOB Proximity:</span>
+                  <span className="font-mono font-bold text-navy">30 Pts</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full mt-1.5 overflow-hidden">
+                  <div className="h-full bg-emerald-600 rounded-full" style={{ width: '30%' }}></div>
+                </div>
+                <span className="text-[9px] text-slate-400 mt-1 block">Exact & Typo Distances</span>
+              </div>
+
+              <div className="p-2 rounded bg-white border border-slate-200 shadow-xs">
+                <div className="flex justify-between text-[11px] text-slate-600">
+                  <span>Sanitized Phone:</span>
+                  <span className="font-mono font-bold text-navy">40 Pts</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-100 rounded-full mt-1.5 overflow-hidden">
+                  <div className="h-full bg-purple-600 rounded-full" style={{ width: '40%' }}></div>
+                </div>
+                <span className="text-[9px] text-slate-400 mt-1 block">10-Digit Mobile Exact Match</span>
+              </div>
             </div>
           </div>
         </div>

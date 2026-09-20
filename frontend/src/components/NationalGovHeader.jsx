@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, Globe, ArrowRight, ExternalLink, ChevronDown } from 'lucide-react';
+import { Search, Globe, ArrowRight, ExternalLink, ChevronDown, User, LogIn, Shield } from 'lucide-react';
 import { t, SUPPORTED_LANGS } from '../i18n';
+import { useAuth } from '../context/AuthContext';
 
 export default function NationalGovHeader({
   lang = 'en',
@@ -190,13 +191,13 @@ export default function NationalGovHeader({
           </button>
         </form>
 
-        {/* Role Quick Links (Context-Aware) */}
-        <div className="flex items-center gap-2.5">
+        {/* Role Quick Links & RBAC Session */}
+        <div className="flex items-center gap-2">
           {activeFamilyId ? (
             officerFamilyMatch ? (
               <Link
                 to={`/citizen/family/${activeFamilyId}`}
-                className="text-xs font-bold text-slate-800 hover:text-navy px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 transition-colors flex items-center gap-1.5 shadow-xs"
+                className="text-xs font-bold text-slate-800 hover:text-navy px-2.5 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 transition-colors flex items-center gap-1.5 shadow-xs"
                 title={`Open citizen self-service view for ${activeFamilyId}`}
               >
                 <span className="hidden sm:inline">Citizen View:</span>
@@ -206,7 +207,7 @@ export default function NationalGovHeader({
             ) : (
               <Link
                 to={`/officer/families/${activeFamilyId}`}
-                className="text-xs font-bold text-white bg-navy hover:bg-navy-dark px-3 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+                className="text-xs font-bold text-white bg-navy hover:bg-navy-dark px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
                 title={`Audit official government records for ${activeFamilyId}`}
               >
                 <span className="hidden sm:inline">Officer Audit:</span>
@@ -216,8 +217,8 @@ export default function NationalGovHeader({
             )
           ) : currentRole === 'officer' ? (
             <Link
-              to="/citizen/login"
-              className="text-xs font-bold text-slate-700 hover:text-navy px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-xs"
+              to="/citizen/family/GJ-F000525"
+              className="text-xs font-bold text-slate-700 hover:text-navy px-2.5 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-xs"
             >
               <span>{t('citizen_view', lang)}</span>
               <ExternalLink className="w-3 h-3 text-[#FF671F]" />
@@ -225,12 +226,23 @@ export default function NationalGovHeader({
           ) : (
             <Link
               to="/officer/dashboard"
-              className="text-xs font-bold text-white bg-navy hover:bg-navy-dark px-3.5 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+              className="text-xs font-bold text-white bg-navy hover:bg-navy-dark px-3 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
             >
               <span>{t('officer_console', lang)}</span>
               <ArrowRight className="w-3 h-3 text-[#FF671F]" />
             </Link>
           )}
+
+          {/* Unified RBAC Login / Role Switcher Gateway */}
+          <Link
+            to="/login"
+            className="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-navy border border-amber-500/30 transition-all flex items-center gap-1.5 shadow-xs"
+            title="Switch Role or Authenticate via State SSO Gateway"
+          >
+            <Shield className="w-3.5 h-3.5 text-[#FF671F]" />
+            <span className="hidden md:inline">RBAC Login</span>
+            <span className="md:hidden">Login</span>
+          </Link>
         </div>
       </div>
     </header>

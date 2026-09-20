@@ -274,7 +274,7 @@ export default function LandingPage() {
 
               <div className="mt-8 pt-5 border-t border-slate-200">
                 <Link
-                  to="/officer/dashboard"
+                  to="/login?role=officer"
                   className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs sm:text-sm font-bold text-white bg-navy hover:bg-navy-dark transition-all shadow-md group-hover:bg-[#071D33]"
                 >
                   <span>{t('officer_btn', lang)}</span>
@@ -337,7 +337,7 @@ export default function LandingPage() {
 
               <div className="mt-8 pt-5 border-t border-slate-200">
                 <Link
-                  to="/citizen/login"
+                  to="/login?role=citizen"
                   className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-xs sm:text-sm font-bold text-slate-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 transition-all shadow-sm"
                 >
                   <span>{t('citizen_btn', lang)}</span>

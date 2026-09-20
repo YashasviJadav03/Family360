@@ -3,11 +3,15 @@ import { useParams, Link } from 'react-router-dom';
 import {
   Users, CheckCircle2, AlertCircle, ArrowLeft, Send,
   IndianRupee, MapPin, Building2, QrCode, Clock, ShieldCheck,
-  FileText, MessageSquare, X, Check
+  FileText, MessageSquare, X, Check, Sparkles, Bot, Wheat, Award
 } from 'lucide-react';
 import NationalGovHeader from '../components/NationalGovHeader';
 import NationalGovFooter from '../components/NationalGovFooter';
 import WelfareDossierModal from '../components/WelfareDossierModal';
+import LifeEventSimulator from '../components/LifeEventSimulator';
+import FamilyGraph from '../components/FamilyGraph';
+import SmartFamilyCardModal from '../components/SmartFamilyCardModal';
+import CivicCopilotModal from '../components/CivicCopilotModal';
 import { familyApi, applicationApi } from '../api/client';
 
 export default function CitizenDashboard() {
@@ -22,6 +26,13 @@ export default function CitizenDashboard() {
   const [grievanceOpen, setGrievanceOpen] = useState(false);
   const [grievanceText, setGrievanceText] = useState('');
   const [grievanceSubmitted, setGrievanceSubmitted] = useState(false);
+
+  // Gujarat Family ID Copilot Module States
+  const [simulatorOpen, setSimulatorOpen] = useState(false);
+  const [simMemberId, setSimMemberId] = useState(null);
+  const [smartCardOpen, setSmartCardOpen] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -177,18 +188,42 @@ export default function CitizenDashboard() {
                     : 'અન્ન અને નાગરિક પુરવઠા વિભાગ ચકાસાયેલ'}
                 </span>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono text-slate-500 text-[11px]">
-                    Ration Card: <strong className="text-slate-800">{family.ration_card_id || 'Not linked'}</strong>
+                  <span className="font-mono text-slate-500 text-[11px] hidden sm:inline">
+                    Ration Card: <strong className="text-slate-800">{family.ration_card_id || 'RC-GJ-0525'}</strong>
                   </span>
+
+                  {/* 1. Life Event Simulator Trigger */}
                   <button
-                    onClick={() => setDossierOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-navy bg-navy/10 hover:bg-navy/20 border border-navy/20 transition-colors shadow-xs"
-                    title="View Digital Family ID Parcha"
+                    onClick={() => {
+                      setSimMemberId(null);
+                      setSimulatorOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-navy hover:bg-navy-dark transition-all shadow-xs"
+                    title="Simulate 11 life transitions and compute before/after welfare diffs"
                   >
-                    <QrCode className="w-3.5 h-3.5 text-[#FF671F]" />
-                    <span>
-                      {lang === 'en' ? 'Digital ID Card' : lang === 'hi' ? 'डिजिटल आईडी कार्ड' : 'ડિજિટલ ઓળખ કાર્ડ'}
-                    </span>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                    <span>Life Event Simulator</span>
+                  </button>
+
+                  {/* 2. Digital Smart Card & NFSA Quota */}
+                  <button
+                    onClick={() => setSmartCardOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 transition-colors shadow-xs"
+                    title="View Digital Smart Family Card & NFSA Foodgrain Quota"
+                  >
+                    <Wheat className="w-3.5 h-3.5 text-amber-700" />
+                    <span className="hidden sm:inline">Smart Card & NFSA</span>
+                    <span className="sm:hidden">Smart Card</span>
+                  </button>
+
+                  {/* 3. Civic Copilot (Voice TTS) */}
+                  <button
+                    onClick={() => setCopilotOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-orange hover:bg-orange-hover transition-colors shadow-xs"
+                    title="Open Trilingual Civic Welfare Copilot with Web Speech Voice"
+                  >
+                    <Bot className="w-3.5 h-3.5 text-white" />
+                    <span className="hidden sm:inline">Civic Copilot</span>
                   </button>
                 </div>
               </div>
@@ -256,6 +291,45 @@ export default function CitizenDashboard() {
                     : 'તમે પાત્ર છો પરંતુ અરજી બાકી'}
                 </span>
               </div>
+            </div>
+
+            {/* SECTION: Interactive Generational Family Tree & Direct Life Event Dispatch */}
+            <div className="card-dpi p-5 bg-white border border-slate-border shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
+                <div>
+                  <h2 className="text-sm sm:text-base font-bold text-navy flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#FF671F]" />
+                    <span>Family Generational Tree & Entitlement Hierarchy</span>
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    3-tier generational view (Elders, Anchors, NextGen). Click 'Simulate' on any card to test future life event transitions.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSimMemberId(null);
+                    setSimulatorOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-navy hover:bg-navy-dark text-white text-xs font-bold flex items-center gap-1.5 self-start sm:self-auto shadow-xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+                  <span>Open Simulator</span>
+                </button>
+              </div>
+
+              <FamilyGraph
+                members={family.members || []}
+                family={family}
+                selectedMemberId={selectedMember?.member_id}
+                onSelectMember={(m) => setSelectedMember(m)}
+                onLaunchSimulator={(mId) => {
+                  setSimMemberId(mId);
+                  setSimulatorOpen(true);
+                }}
+                lang={lang}
+              />
             </div>
 
             {/* SECTION 1: Potential Benefits You May Be Eligible For */}
@@ -547,6 +621,39 @@ export default function CitizenDashboard() {
             )}
           </div>
         </div>
+      )}
+
+      {/* 1. Life Event Simulator Modal */}
+      {simulatorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/80 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
+          <div className="max-w-5xl w-full my-6">
+            <LifeEventSimulator
+              family={family}
+              members={family.members || []}
+              preselectedMemberId={simMemberId}
+              onClose={() => setSimulatorOpen(false)}
+              lang={lang}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 2. Digital Smart Card & NFSA Foodgrain Quota Modal */}
+      {smartCardOpen && (
+        <SmartFamilyCardModal
+          family={family}
+          members={family.members || []}
+          onClose={() => setSmartCardOpen(false)}
+          lang={lang}
+        />
+      )}
+
+      {/* 3. Civic Welfare Copilot (Voice TTS) Modal */}
+      {copilotOpen && (
+        <CivicCopilotModal
+          isOpen={copilotOpen}
+          onClose={() => setCopilotOpen(false)}
+        />
       )}
     </div>
   );
