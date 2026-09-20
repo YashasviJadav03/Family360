@@ -25,11 +25,9 @@ services:
   # -------------------------------------------------------------
   # Frontend Static Site (React + Vite)
   # -------------------------------------------------------------
-  - type: web
+  - type: static
     name: family360-frontend
-    runtime: static
     rootDir: frontend
-    plan: free
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     routes:
