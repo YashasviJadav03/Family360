@@ -1,39 +1,49 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.router import api_router
 
 app = FastAPI(
     title="Family360 API",
-    description="Family-Centric Welfare Intelligence & Beneficiary Management Platform",
-    version="0.1.0",
+    description="Family-Centric Welfare Intelligence & Beneficiary Management Platform for Gujarat Family ID",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# CORS setup to allow local frontend access (including spike.html and Vite dev server)
+# CORS middleware configuration for frontend (localhost:5173 and preview origins)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "*",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Core API Routes
+app.include_router(api_router)
 
-@app.get("/health", summary="Health check", description="Returns API health status")
+
+@app.get("/health", summary="Health Check", description="Returns system health status")
 def health_check():
     return {"status": "ok"}
 
 
 # ==============================================================================
-# SPIKE — DELETE OR RETIRE BEFORE PHASE 3
-# Rapid vertical-slice spike to prove the core loop: UI -> API -> Rule Check -> Response
+# SPIKE (PHASE 0.5) — RETAINED FOR RETROSPECTIVE & SPEED-OF-ITERATION PROOF
 # ==============================================================================
 @app.get(
     "/spike/eligibility-demo",
     tags=["Spike (Throwaway)"],
     summary="Spike Eligibility Evaluation Demo",
-    description="Throwaway vertical-slice endpoint proving deterministic eligibility evaluation end-to-end.",
+    description="Rapid vertical-slice spike endpoint proving deterministic eligibility evaluation end-to-end.",
 )
 def spike_eligibility_demo():
-    # Hardcoded test family
     family = {
         "family_id": "GJ-F000001",
         "district": "Ahmedabad",
@@ -54,8 +64,6 @@ def spike_eligibility_demo():
             },
         ],
     }
-
-    # Hardcoded scheme criteria: Old Age Pension (age >= 60, income <= 200,000)
     scheme_name = "Indira Gandhi National Old Age Pension / Vrudh Pension Yojana"
     age_rule_passed = any(m["age"] >= 60 for m in family["members"])
     income_rule_passed = family["annual_income"] <= 200000
