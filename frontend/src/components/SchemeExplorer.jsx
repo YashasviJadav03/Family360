@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { BookOpen, ExternalLink, ShieldCheck, CheckCircle2, Search, Filter } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { BookOpen, ExternalLink, ShieldCheck, CheckCircle2, Search, Filter, Users, ArrowRight } from 'lucide-react';
 
 export default function SchemeExplorer({ schemes = [] }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -117,20 +118,27 @@ export default function SchemeExplorer({ schemes = [] }) {
               </div>
             </div>
 
-            {scheme.source_url && (
-              <div className="pt-3 border-t border-slate-border flex items-center justify-between text-xs">
-                <span className="text-slate-400 text-[11px]">Official Gujarat Scheme Rule</span>
+            <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <Link
+                to={`/officer/families?scheme_id=${scheme.scheme_id}&has_gap=true`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-navy hover:bg-navy-dark rounded-lg transition-colors shadow-xs"
+              >
+                <Users className="w-3.5 h-3.5 text-[#FF671F]" />
+                <span>Target Eligible Households →</span>
+              </Link>
+
+              {scheme.source_url && (
                 <a
                   href={scheme.source_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-navy hover:text-orange font-semibold text-xs transition-colors"
+                  className="inline-flex items-center gap-1 text-slate-500 hover:text-navy font-semibold text-xs transition-colors"
                 >
-                  <span>Portal Source</span>
+                  <span>Official Rules</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ))}
       </div>

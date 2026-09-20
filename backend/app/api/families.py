@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from app.db.session import get_db
 from app.models.family import Family
 from app.models.benefit import Benefit
@@ -18,18 +18,33 @@ router = APIRouter(prefix="/families", tags=["Families"])
     "",
     response_model=PaginatedResponse[FamilySummaryOut],
     summary="List Families",
-    description="Retrieve a paginated list of families with optional filtering by district, social category, and unclaimed benefit gap status.",
+    description="Retrieve a paginated list of families with optional filtering by district, social category, scheme, and unclaimed benefit gap status.",
 )
 def list_families(
     district: str | None = Query(None, description="Filter by district name"),
     category: str | None = Query(None, description="Filter by social category (SC, ST, OBC, General, SEBC)"),
     social_category: str | None = Query(None, description="Alias for category filter"),
     has_gap: bool | None = Query(None, description="Filter for families with at least 1 unclaimed benefit gap"),
+    scheme_id: str | None = Query(None, description="Filter families eligible for or having an entitlement in this scheme"),
+    search: str | None = Query(None, description="Search by family ID, ration card, village, taluka, or district"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     db: Session = Depends(get_db),
 ):
     query = db.query(Family)
+
+    if search and search.strip():
+        term = f"%{search.strip().upper()}%"
+        term_orig = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                Family.family_id.ilike(term),
+                Family.ration_card_id.ilike(term),
+                Family.village.ilike(term_orig),
+                Family.taluka.ilike(term_orig),
+                Family.district.ilike(term_orig),
+            )
+        )
 
     if district and isinstance(district, str):
         query = query.filter(Family.district == district)
@@ -38,7 +53,12 @@ def list_families(
     if cat_filter:
         query = query.filter(Family.social_category == cat_filter)
 
-    if isinstance(has_gap, bool):
+    if scheme_id and isinstance(scheme_id, str):
+        scheme_b_query = db.query(Benefit.family_id).filter(Benefit.scheme_id == scheme_id)
+        if has_gap:
+            scheme_b_query = scheme_b_query.filter(Benefit.status == "NOT_APPLIED")
+        query = query.filter(Family.family_id.in_(scheme_b_query.distinct().scalar_subquery()))
+    elif isinstance(has_gap, bool):
         # Families that have at least one NOT_APPLIED benefit
         gap_subquery = (
             db.query(Benefit.family_id)

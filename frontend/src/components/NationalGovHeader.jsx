@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, Globe, ArrowRight, ExternalLink, ChevronDown } from 'lucide-react';
 import { t, SUPPORTED_LANGS } from '../i18n';
 
@@ -12,6 +12,11 @@ export default function NationalGovHeader({
   const [searchQuery, setSearchQuery] = useState('');
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const officerFamilyMatch = location.pathname.match(/\/officer\/families\/([A-Za-z0-9_-]+)/);
+  const citizenFamilyMatch = location.pathname.match(/\/citizen\/family\/([A-Za-z0-9_-]+)/);
+  const activeFamilyId = officerFamilyMatch ? officerFamilyMatch[1] : (citizenFamilyMatch ? citizenFamilyMatch[1] : null);
 
   const handleGlobalSearch = (e) => {
     e.preventDefault();
@@ -185,9 +190,31 @@ export default function NationalGovHeader({
           </button>
         </form>
 
-        {/* Role Quick Links */}
+        {/* Role Quick Links (Context-Aware) */}
         <div className="flex items-center gap-2.5">
-          {currentRole === 'officer' ? (
+          {activeFamilyId ? (
+            officerFamilyMatch ? (
+              <Link
+                to={`/citizen/family/${activeFamilyId}`}
+                className="text-xs font-bold text-slate-800 hover:text-navy px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 transition-colors flex items-center gap-1.5 shadow-xs"
+                title={`Open citizen self-service view for ${activeFamilyId}`}
+              >
+                <span className="hidden sm:inline">Citizen View:</span>
+                <span className="font-mono text-[11px] font-extrabold text-amber-900">{activeFamilyId}</span>
+                <ExternalLink className="w-3 h-3 text-[#FF671F]" />
+              </Link>
+            ) : (
+              <Link
+                to={`/officer/families/${activeFamilyId}`}
+                className="text-xs font-bold text-white bg-navy hover:bg-navy-dark px-3 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+                title={`Audit official government records for ${activeFamilyId}`}
+              >
+                <span className="hidden sm:inline">Officer Audit:</span>
+                <span className="font-mono text-[11px] font-extrabold text-amber-300">{activeFamilyId}</span>
+                <ArrowRight className="w-3 h-3 text-[#FF671F]" />
+              </Link>
+            )
+          ) : currentRole === 'officer' ? (
             <Link
               to="/citizen/login"
               className="text-xs font-bold text-slate-700 hover:text-navy px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-xs"

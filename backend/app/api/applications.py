@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.application import Application
@@ -10,6 +10,29 @@ from app.models.benefit import Benefit
 from app.schemas.application import ApplicationCreate, ApplicationUpdate, ApplicationOut
 
 router = APIRouter(prefix="/applications", tags=["Applications"])
+
+
+@router.get(
+    "",
+    response_model=list[ApplicationOut],
+    summary="List Applications",
+    description="Retrieve submitted scheme applications with optional filtering by family_id, scheme_id, and status.",
+)
+def list_applications(
+    family_id: str | None = Query(None, description="Filter by family ID"),
+    scheme_id: str | None = Query(None, description="Filter by scheme ID"),
+    status: str | None = Query(None, description="Filter by status (SUBMITTED, DOCS_VERIFIED, UNDER_VERIFICATION, APPROVED, REJECTED)"),
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Application)
+    if family_id:
+        query = query.filter(Application.family_id == family_id)
+    if scheme_id:
+        query = query.filter(Application.scheme_id == scheme_id)
+    if status:
+        query = query.filter(Application.status == status)
+    return query.order_by(Application.submitted_at.desc()).limit(limit).all()
 
 
 @router.post(

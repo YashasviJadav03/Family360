@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   Users, CheckCircle2, AlertCircle, ArrowLeft, Send,
-  IndianRupee, MapPin, Building2
+  IndianRupee, MapPin, Building2, QrCode, Clock, ShieldCheck,
+  FileText, MessageSquare, X, Check
 } from 'lucide-react';
 import NationalGovHeader from '../components/NationalGovHeader';
 import NationalGovFooter from '../components/NationalGovFooter';
+import WelfareDossierModal from '../components/WelfareDossierModal';
 import { familyApi, applicationApi } from '../api/client';
 
 export default function CitizenDashboard() {
@@ -16,6 +18,10 @@ export default function CitizenDashboard() {
   const [error, setError] = useState(null);
   const [lang, setLang] = useState('en');
   const [appliedSchemes, setAppliedSchemes] = useState({});
+  const [dossierOpen, setDossierOpen] = useState(false);
+  const [grievanceOpen, setGrievanceOpen] = useState(false);
+  const [grievanceText, setGrievanceText] = useState('');
+  const [grievanceSubmitted, setGrievanceSubmitted] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -53,17 +59,39 @@ export default function CitizenDashboard() {
 
   const handleApply = async (scheme) => {
     try {
-      await applicationApi.createApplication({
+      const res = await applicationApi.createApplication({
         family_id: family.family_id,
         member_id: family.members?.[0]?.member_id,
         scheme_id: scheme.scheme_id,
       });
-      setAppliedSchemes((prev) => ({ ...prev, [scheme.scheme_id]: true }));
+      setAppliedSchemes((prev) => ({
+        ...prev,
+        [scheme.scheme_id]: {
+          app_id: res.application_id || 'APP-2026-SUBMITTED',
+          scheme_name: scheme.scheme_name,
+          status: 'SUBMITTED',
+          date: new Date().toLocaleDateString('en-IN')
+        }
+      }));
     } catch (err) {
       console.error(err);
       alert('Could not submit application. Please try again.');
     }
   };
+
+  const handleGrievanceSubmit = (e) => {
+    e.preventDefault();
+    if (!grievanceText.trim()) return;
+    setGrievanceSubmitted(true);
+    setTimeout(() => {
+      setGrievanceSubmitted(false);
+      setGrievanceOpen(false);
+      setGrievanceText('');
+    }, 2500);
+  };
+
+  const existingApplications = family?.applications || [];
+  const hasAnyApplications = existingApplications.length > 0 || Object.keys(appliedSchemes).length > 0;
 
   return (
     <div className="min-h-screen bg-[#F6F8FC] flex flex-col justify-between text-slate-text">
@@ -76,7 +104,7 @@ export default function CitizenDashboard() {
       />
 
       {/* Main Content Area */}
-      <main className="max-w-3xl mx-auto px-4 py-8 w-full flex-1 space-y-6" id="main-content">
+      <main className="max-w-4xl mx-auto px-4 py-8 w-full flex-1 space-y-6" id="main-content">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between pb-2 border-b border-slate-border text-xs">
           <Link
@@ -92,14 +120,16 @@ export default function CitizenDashboard() {
                 : 'પરિવાર શોધ પર પાછા જાઓ'}
             </span>
           </Link>
-          <span className="font-mono text-xs font-bold text-navy bg-navy-subtle px-2 py-0.5 rounded">
-            {familyId}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs font-bold text-navy bg-navy-subtle px-2 py-0.5 rounded">
+              {familyId}
+            </span>
+          </div>
         </div>
 
         {loading ? (
-          <div className="card-dpi p-16 text-center">
-            <div className="w-8 h-8 border-2 border-navy border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <div className="card-dpi p-16 text-center bg-white border border-slate-200">
+            <div className="w-8 h-8 border-2 border-navy border-t-[#FF671F] rounded-full animate-spin mx-auto mb-3"></div>
             <p className="text-xs text-slate-secondary">
               {lang === 'en'
                 ? 'Fetching verified civil registry records...'
@@ -109,7 +139,7 @@ export default function CitizenDashboard() {
             </p>
           </div>
         ) : error || !family ? (
-          <div className="card-dpi p-8 bg-white text-center">
+          <div className="card-dpi p-8 bg-white text-center border border-slate-200">
             <AlertCircle className="w-10 h-10 text-amber-600 mx-auto mb-3" />
             <h3 className="text-base font-bold text-slate-text mb-2">
               {lang === 'en'
@@ -136,8 +166,8 @@ export default function CitizenDashboard() {
         ) : (
           <>
             {/* Reassuring Welcome Summary */}
-            <div className="card-dpi p-6 bg-white border border-slate-border">
-              <div className="flex items-center justify-between gap-2 text-xs font-semibold text-navy mb-1.5">
+            <div className="card-dpi p-6 bg-white border border-slate-border shadow-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-navy mb-2">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                   {lang === 'en'
@@ -146,12 +176,24 @@ export default function CitizenDashboard() {
                     ? 'नागरिक आपूर्ति रजिस्ट्री द्वारा सत्यापित'
                     : 'અન્ન અને નાગરિક પુરવઠા વિભાગ ચકાસાયેલ'}
                 </span>
-                <span className="font-mono text-slate-400 text-[11px]">
-                  Ration: {family.ration_card_id || 'Not linked'}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-slate-500 text-[11px]">
+                    Ration Card: <strong className="text-slate-800">{family.ration_card_id || 'Not linked'}</strong>
+                  </span>
+                  <button
+                    onClick={() => setDossierOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-navy bg-navy/10 hover:bg-navy/20 border border-navy/20 transition-colors shadow-xs"
+                    title="View Digital Family ID Parcha"
+                  >
+                    <QrCode className="w-3.5 h-3.5 text-[#FF671F]" />
+                    <span>
+                      {lang === 'en' ? 'Digital ID Card' : lang === 'hi' ? 'डिजिटल आईडी कार्ड' : 'ડિજિટલ ઓળખ કાર્ડ'}
+                    </span>
+                  </button>
+                </div>
               </div>
 
-              <h1 className="text-xl font-bold font-serif text-navy">
+              <h1 className="text-xl sm:text-2xl font-bold font-serif text-navy">
                 {lang === 'en'
                   ? `Welfare Entitlements for ${family.head_name || 'Your Household'}`
                   : lang === 'hi'
@@ -174,7 +216,7 @@ export default function CitizenDashboard() {
                   ₹{(family.annual_income || 0).toLocaleString('en-IN')}/
                   {lang === 'en' ? 'yr' : lang === 'hi' ? 'वर्ष' : 'વર્ષ'}
                 </span>
-                <span className="font-medium px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[11px]">
+                <span className="font-semibold px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[11px] text-slate-800">
                   {family.social_category}
                 </span>
               </div>
@@ -182,11 +224,11 @@ export default function CitizenDashboard() {
 
             {/* 2 Key Status Overview Cards */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="card-dpi p-4 bg-emerald-50/60 border border-emerald-200">
+              <div className="card-dpi p-4 bg-emerald-50/70 border border-emerald-300">
                 <span className="text-[11px] font-bold text-emerald-900 block uppercase tracking-wider">
                   {lang === 'en' ? 'Active Entitlements' : lang === 'hi' ? 'सक्रिय योजना लाभ' : 'ચાલુ સહાય'}
                 </span>
-                <span className="text-2xl font-bold font-mono text-emerald-900 mt-1 block">
+                <span className="text-2xl font-black font-mono text-emerald-900 mt-1 block">
                   {gapReport?.receiving_schemes?.length || 0}
                 </span>
                 <span className="text-[11px] text-emerald-700 mt-0.5 block">
@@ -198,17 +240,17 @@ export default function CitizenDashboard() {
                 </span>
               </div>
 
-              <div className="card-dpi p-4 bg-amber-50/70 border-2 border-amber-300">
+              <div className="card-dpi p-4 bg-amber-50/80 border-2 border-amber-300">
                 <span className="text-[11px] font-bold text-amber-900 block uppercase tracking-wider flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
                   {lang === 'en' ? 'Eligible to Apply' : lang === 'hi' ? 'पात्र एवं आवेदन योग्य' : 'મળી શકે તેવા લાભો'}
                 </span>
-                <span className="text-2xl font-bold font-mono text-amber-900 mt-1 block">
+                <span className="text-2xl font-black font-mono text-amber-900 mt-1 block">
                   {gapReport?.gap_schemes?.length || 0}
                 </span>
                 <span className="text-[11px] text-amber-800 mt-0.5 block font-medium">
                   {lang === 'en'
-                    ? 'Potential benefit gaps'
+                    ? 'Potential benefit gaps identified'
                     : lang === 'hi'
                     ? 'पात्र हैं किंतु आवेदन लंबित'
                     : 'તમે પાત્ર છો પરંતુ અરજી બાકી'}
@@ -256,7 +298,7 @@ export default function CitizenDashboard() {
                           </div>
                         </div>
 
-                        <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                        <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
                           <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                             {lang === 'en'
@@ -267,26 +309,25 @@ export default function CitizenDashboard() {
                           </span>
 
                           {isApplied ? (
-                            <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded border border-emerald-200 flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              {lang === 'en'
-                                ? 'Application Submitted'
-                                : lang === 'hi'
-                                ? 'आवेदन सफलतापूर्वक जमा'
-                                : 'અરજી સફળતાપૂર્વક સબમિટ થઈ'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded border border-emerald-200 flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>{isApplied.app_id}</span>
+                              </span>
+                              <span className="text-[11px] text-slate-500 font-mono">Submitted</span>
+                            </div>
                           ) : (
                             <button
                               onClick={() => handleApply(scheme)}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-xs font-semibold text-white bg-orange hover:bg-orange-hover transition-colors shadow-sm"
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-xs font-bold text-white bg-[#FF671F] hover:bg-[#E65100] transition-colors shadow-sm"
                             >
                               <Send className="w-3 h-3" />
                               <span>
                                 {lang === 'en'
-                                  ? 'Submit Application'
+                                  ? '1-Click Direct Apply'
                                   : lang === 'hi'
-                                  ? 'आवेदन करें'
-                                  : 'અરજી કરો'}
+                                  ? '1-क्लिक त्वरित आवेदन'
+                                  : '૧-ક્લિક સીધી અરજી'}
                               </span>
                             </button>
                           )}
@@ -298,7 +339,72 @@ export default function CitizenDashboard() {
               </div>
             )}
 
-            {/* SECTION 2: Currently Received Benefits */}
+            {/* SECTION 2: Application Status & Tracking Timeline */}
+            {hasAnyApplications && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between pb-1.5 border-b-2 border-blue-400">
+                  <h2 className="text-sm font-bold text-navy flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-blue-600" />
+                    <span>
+                      {lang === 'en'
+                        ? 'Application Tracking & Verification Status'
+                        : lang === 'hi'
+                        ? 'आवेदन स्थिति एवं सत्यापन प्रगति'
+                        : 'અરજી ટ્રેકિંગ અને ચકાસણી સ્થિતિ'}
+                    </span>
+                  </h2>
+                  <span className="text-[10px] font-semibold text-blue-800 bg-blue-100 px-2 py-0.5 rounded">
+                    Taluka Panchayat Queue
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {/* Newly submitted applications */}
+                  {Object.entries(appliedSchemes).map(([schemeId, appInfo]) => (
+                    <div key={schemeId} className="card-dpi p-4 bg-white border border-blue-200 rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-bold text-navy bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+                          {appInfo.app_id}
+                        </span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-900">
+                          SUBMITTED · In Queue
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold text-slate-800">{appInfo.scheme_name || schemeId}</p>
+                      <div className="flex items-center gap-3 text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                        <span>Submitted: {appInfo.date}</span>
+                        <span>·</span>
+                        <span>Assigned to: Taluka Development Officer</span>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Pre-existing applications from database */}
+                  {existingApplications.map((app) => (
+                    <div key={app.application_id} className="card-dpi p-4 bg-white border border-slate-200 rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-bold text-navy bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                          {app.application_id}
+                        </span>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                          app.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-900' :
+                          app.status === 'REJECTED' ? 'bg-rose-100 text-rose-900' :
+                          'bg-amber-100 text-amber-900'
+                        }`}>
+                          {app.status}
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold text-slate-800">{app.scheme_id}</p>
+                      <div className="flex items-center gap-3 text-[11px] text-slate-500 pt-1 border-t border-slate-100">
+                        <span>Officer: {app.assigned_officer || 'District Social Welfare Office'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 3: Currently Received Benefits */}
             {gapReport?.receiving_schemes && gapReport.receiving_schemes.length > 0 && (
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between pb-1.5 border-b-2 border-emerald-400">
@@ -342,17 +448,28 @@ export default function CitizenDashboard() {
               </div>
             )}
 
-            {/* Institutional Helpdesk Card */}
-            <div className="p-4 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-secondary space-y-1.5">
-              <p className="font-bold text-slate-text flex items-center gap-1.5">
-                <Building2 className="w-4 h-4 text-navy" />
-                {lang === 'en'
-                  ? 'Official Grievance & Verification Contact'
-                  : lang === 'hi'
-                  ? 'आधिकारिक सहायता एवं संपर्क केंद्र'
-                  : 'સહાય અને ચકાસણી માટે સંપર્ક'}
-              </p>
-              <p>
+            {/* Institutional Helpdesk & Grievance Card */}
+            <div className="p-5 rounded-xl bg-slate-100 border border-slate-300 text-xs text-slate-secondary space-y-2.5">
+              <div className="flex items-center justify-between">
+                <p className="font-bold text-slate-900 flex items-center gap-1.5 text-xs">
+                  <Building2 className="w-4 h-4 text-navy" />
+                  {lang === 'en'
+                    ? 'Official Grievance & Verification Contact'
+                    : lang === 'hi'
+                    ? 'आधिकारिक सहायता एवं संपर्क केंद्र'
+                    : 'સહાય અને ચકાસણી માટે સંપર્ક'}
+                </p>
+                <button
+                  onClick={() => setGrievanceOpen(true)}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-navy hover:text-[#FF671F] underline"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>
+                    {lang === 'en' ? 'Request Data Correction' : lang === 'hi' ? 'विवरण सुधार अनुरोध' : 'વિગત સુધારણા વિનંતી'}
+                  </span>
+                </button>
+              </div>
+              <p className="leading-relaxed">
                 {lang === 'en'
                   ? 'If any demographic detail is mismatched, visit your local Taluka e-Samaj Kalyan office with original documents or call the toll-free citizen helpline at 1800-233-5500.'
                   : lang === 'hi'
@@ -366,6 +483,71 @@ export default function CitizenDashboard() {
 
       {/* Official Government Footer */}
       <NationalGovFooter lang={lang} />
+
+      {/* Official Welfare Dossier Modal for Citizens */}
+      <WelfareDossierModal
+        isOpen={dossierOpen}
+        onClose={() => setDossierOpen(false)}
+        family={family}
+        gapReport={gapReport}
+        mode="citizen"
+      />
+
+      {/* Citizen Grievance / Correction Modal */}
+      {grievanceOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-300 max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-sm font-bold text-navy flex items-center gap-1.5">
+                <MessageSquare className="w-4 h-4 text-[#FF671F]" />
+                <span>
+                  {lang === 'en' ? 'Submit Correction / Grievance' : lang === 'hi' ? 'सुधार अथवा शिकायत दर्ज करें' : 'સુધારણા અથવા ફરિયાદ નોંધાવો'}
+                </span>
+              </h3>
+              <button onClick={() => setGrievanceOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {grievanceSubmitted ? (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-center space-y-1 text-xs">
+                <CheckCircle2 className="w-6 h-6 text-emerald-600 mx-auto" />
+                <p className="font-bold text-emerald-900">Grievance Docket Created: GRV-GJ-2026-0812</p>
+                <p className="text-emerald-700">Forwarded to Taluka Development Officer for review.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleGrievanceSubmit} className="space-y-3 text-xs">
+                <p className="text-slate-600">
+                  Specify any incorrect demographic details (e.g. member missing, annual income update, or caste certificate re-verification).
+                </p>
+                <textarea
+                  rows={3}
+                  value={grievanceText}
+                  onChange={(e) => setGrievanceText(e.target.value)}
+                  placeholder="Describe the discrepancy..."
+                  className="w-full p-2.5 border border-slate-300 rounded-lg focus:outline-none focus:border-navy text-slate-800"
+                  required
+                />
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setGrievanceOpen(false)}
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 text-xs font-bold text-white bg-navy hover:bg-navy-dark rounded-md transition-colors"
+                  >
+                    Submit Docket
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

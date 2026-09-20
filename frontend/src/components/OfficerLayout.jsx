@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Award, FileCheck, BookOpen, Bot,
-  LogOut, Shield, Globe, Bell, ChevronRight, Menu, X, ExternalLink
+  LogOut, Shield, Globe, Bell, ChevronRight, Menu, X, ExternalLink, MapPin
 } from 'lucide-react';
 import NationalGovHeader from './NationalGovHeader';
 import NationalGovFooter from './NationalGovFooter';
@@ -18,6 +18,7 @@ export default function OfficerLayout({ children }) {
   const navItems = [
     { label: 'Overview', path: '/officer/dashboard', icon: LayoutDashboard },
     { label: 'Family Registry', path: '/officer/families', icon: Users },
+    { label: 'Saturation Camps', path: '/officer/camps', icon: MapPin, badge: 'Hotspots' },
     { label: 'Review Queue', path: '/officer/duplicates', icon: FileCheck, badge: '3,356' },
     { label: 'Scheme Directory', path: '/officer/schemes', icon: BookOpen },
   ];

@@ -10,6 +10,7 @@ import OfficerLayout from '../components/OfficerLayout';
 import FamilyGraph from '../components/FamilyGraph';
 import BenefitGapPanel from '../components/BenefitGapPanel';
 import AssistantDrawer from '../components/AssistantDrawer';
+import WelfareDossierModal from '../components/WelfareDossierModal';
 import { familyApi, applicationApi } from '../api/client';
 
 export default function OfficerFamilyDetailPage() {
@@ -22,6 +23,7 @@ export default function OfficerFamilyDetailPage() {
   const [updatingAppId, setUpdatingAppId] = useState(null);
   const [copied, setCopied] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const [dossierOpen, setDossierOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
   const showToast = (msg) => {
@@ -159,16 +161,25 @@ export default function OfficerFamilyDetailPage() {
             </span>
 
             <button
-              onClick={() => showToast('Generating official Welfare Dossier PDF...')}
-              className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-100 border border-slate-border text-slate-700 transition-colors"
+              onClick={() => setDossierOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 transition-colors shadow-xs"
             >
-              <Printer className="w-3.5 h-3.5 text-slate-500" />
+              <Printer className="w-3.5 h-3.5 text-slate-600" />
               <span>Print Dossier</span>
             </button>
 
+            <Link
+              to={`/citizen/family/${family.family_id}`}
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 transition-colors shadow-xs"
+              title="Open citizen-facing self-service view"
+            >
+              <ExternalLink className="w-3.5 h-3.5 text-[#FF671F]" />
+              <span>Citizen View</span>
+            </Link>
+
             <button
               onClick={() => setAssistantOpen(true)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded bg-gradient-to-r from-[#FF671F] to-[#E65100] text-white hover:opacity-95 shadow-sm transition-all"
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FF671F] to-[#E65100] text-white hover:opacity-95 shadow-sm transition-all"
             >
               <Bot className="w-3.5 h-3.5" />
               <span>AI Welfare Audit</span>
@@ -652,6 +663,15 @@ export default function OfficerFamilyDetailPage() {
 
         {/* Slide-over Assistant Drawer */}
         <AssistantDrawer isOpen={assistantOpen} onClose={() => setAssistantOpen(false)} />
+
+        {/* Official Welfare Dossier Printable Modal */}
+        <WelfareDossierModal
+          isOpen={dossierOpen}
+          onClose={() => setDossierOpen(false)}
+          family={family}
+          gapReport={gapReport}
+          mode="officer"
+        />
       </div>
     </OfficerLayout>
   );

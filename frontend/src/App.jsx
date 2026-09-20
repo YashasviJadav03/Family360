@@ -11,6 +11,7 @@ import OfficerFamiliesPage from './pages/OfficerFamiliesPage';
 import OfficerFamilyDetailPage from './pages/OfficerFamilyDetailPage';
 import OfficerDuplicatesPage from './pages/OfficerDuplicatesPage';
 import OfficerSchemesPage from './pages/OfficerSchemesPage';
+import OfficerCampsPage from './pages/OfficerCampsPage';
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/officer/families/:familyId" element={<OfficerFamilyDetailPage />} />
         <Route path="/officer/duplicates" element={<OfficerDuplicatesPage />} />
         <Route path="/officer/schemes" element={<OfficerSchemesPage />} />
+        <Route path="/officer/camps" element={<OfficerCampsPage />} />
 
         {/* Catch-all fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
