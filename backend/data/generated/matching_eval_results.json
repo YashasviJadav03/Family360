@@ -1,0 +1,17 @@
+{
+  "evaluation_dataset": "ground_truth_duplicate_pairs.csv (synthetic validation set)",
+  "decision_threshold": 0.65,
+  "total_pairs_evaluated": 9975,
+  "true_positives": 3309,
+  "true_negatives": 6649,
+  "false_positives": 0,
+  "false_negatives": 17,
+  "precision": 1.0,
+  "recall": 0.9949,
+  "f1_score": 0.9974,
+  "false_positive_rate": 0.0,
+  "precision_percentage": "100.00%",
+  "recall_percentage": "99.49%",
+  "f1_percentage": "99.74%",
+  "fpr_percentage": "0.00%"
+}

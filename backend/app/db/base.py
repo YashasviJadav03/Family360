@@ -7,6 +7,7 @@ from app.models.eligibility_rule import EligibilityRule
 from app.models.benefit import Benefit
 from app.models.application import Application
 from app.models.officer import Officer
+from app.models.duplicate_review import DuplicateReview
 
 __all__ = [
     "Base",
@@ -18,4 +19,5 @@ __all__ = [
     "Benefit",
     "Application",
     "Officer",
+    "DuplicateReview",
 ]
