@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#F6F8FC] text-[#172033] font-sans antialiased;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Restrained, crisp DPI aesthetic styling */
+.border-subtle {
+  border: 1px solid #E4E7EC;
+}
+
+.card-dpi {
+  background-color: #FFFFFF;
+  border: 1px solid #E4E7EC;
+  border-radius: 8px;
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F2F4F7;
+}
+::-webkit-scrollbar-thumb {
+  background: #D0D5DD;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #98A2B3;
+}
