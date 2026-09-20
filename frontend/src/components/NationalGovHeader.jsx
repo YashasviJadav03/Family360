@@ -43,6 +43,8 @@ export default function NationalGovHeader({
   // Next language in cycle
   const currentLangObj = SUPPORTED_LANGS.find((l) => l.code === lang) || SUPPORTED_LANGS[0];
 
+  const { user, role, isAuthenticated, isCitizen, isOfficer, logout } = useAuth();
+
   return (
     <header className="w-full bg-white border-b border-slate-200 text-slate-800 select-none shadow-sm z-30 sticky top-0">
       {/* National Tricolor Top Ribbon */}
@@ -121,7 +123,6 @@ export default function NationalGovHeader({
         {/* Emblem & Title */}
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-3 group">
-            {/* National State Emblem of India (Ashoka Lion Capital with Satyameva Jayate) */}
             <svg
               viewBox="0 0 100 112"
               className="w-10 h-12 text-[#8C6014] drop-shadow-xs shrink-0 group-hover:scale-[1.02] transition-transform"
@@ -148,7 +149,7 @@ export default function NationalGovHeader({
               <path d="M24 75.5 C31 81.5, 40 83.5, 50 83.5 C60 83.5, 69 81.5, 76 75.5" stroke="#65440A" strokeWidth="1" fill="none" />
               <rect x="22" y="85.5" width="56" height="3" rx="1" fill="#65440A" />
               <text x="50" y="100" textAnchor="middle" fontSize="8.5" fontWeight="800" fontFamily="'Noto Sans Devanagari', 'Segoe UI', sans-serif" fill="#65440A" letterSpacing="0.4">
-                सत्यमेव जयते
+                સત્યમેવ જયતે
               </text>
             </svg>
 
@@ -170,79 +171,119 @@ export default function NationalGovHeader({
           </Link>
         </div>
 
-        {/* Global Search */}
-        <form onSubmit={handleGlobalSearch} className="flex-1 max-w-md hidden lg:flex items-center">
-          <div className="relative flex-1 flex items-center border border-slate-300 rounded-l-lg bg-slate-50 focus-within:bg-white focus-within:border-navy transition-all shadow-inner">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
-            <input
-              type="text"
-              placeholder={t('search_placeholder', lang)}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full text-xs pl-9 pr-3 py-2 bg-transparent text-slate-800 placeholder:text-slate-400 focus:outline-none"
-            />
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2 text-xs font-bold text-white bg-navy hover:bg-navy-dark rounded-r-lg transition-all flex items-center gap-1 border border-navy shadow-sm"
-          >
-            <span>{t('search_btn', lang)}</span>
-            <ArrowRight className="w-3 h-3 text-amber-300" />
-          </button>
-        </form>
-
-        {/* Role Quick Links & RBAC Session */}
-        <div className="flex items-center gap-2">
-          {activeFamilyId ? (
-            officerFamilyMatch ? (
-              <Link
-                to={`/citizen/family/${activeFamilyId}`}
-                className="text-xs font-bold text-slate-800 hover:text-navy px-2.5 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 transition-colors flex items-center gap-1.5 shadow-xs"
-                title={`Open citizen self-service view for ${activeFamilyId}`}
-              >
-                <span className="hidden sm:inline">Citizen View:</span>
-                <span className="font-mono text-[11px] font-extrabold text-amber-900">{activeFamilyId}</span>
-                <ExternalLink className="w-3 h-3 text-[#FF671F]" />
-              </Link>
-            ) : (
-              <Link
-                to={`/officer/families/${activeFamilyId}`}
-                className="text-xs font-bold text-white bg-navy hover:bg-navy-dark px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
-                title={`Audit official government records for ${activeFamilyId}`}
-              >
-                <span className="hidden sm:inline">Officer Audit:</span>
-                <span className="font-mono text-[11px] font-extrabold text-amber-300">{activeFamilyId}</span>
-                <ArrowRight className="w-3 h-3 text-[#FF671F]" />
-              </Link>
-            )
-          ) : currentRole === 'officer' ? (
-            <Link
-              to="/citizen/family/GJ-F000525"
-              className="text-xs font-bold text-slate-700 hover:text-navy px-2.5 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-xs"
+        {/* Global Search for Officers */}
+        {isOfficer && (
+          <form onSubmit={handleGlobalSearch} className="flex-1 max-w-md hidden lg:flex items-center">
+            <div className="relative flex-1 flex items-center border border-slate-300 rounded-l-lg bg-slate-50 focus-within:bg-white focus-within:border-navy transition-all shadow-inner">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+              <input
+                type="text"
+                placeholder={t('search_placeholder', lang)}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full text-xs pl-9 pr-3 py-2 bg-transparent text-slate-800 placeholder:text-slate-400 focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 text-xs font-bold text-white bg-navy hover:bg-navy-dark rounded-r-lg transition-all flex items-center gap-1 border border-navy shadow-sm"
             >
-              <span>{t('citizen_view', lang)}</span>
-              <ExternalLink className="w-3 h-3 text-[#FF671F]" />
-            </Link>
+              <span>{t('search_btn', lang)}</span>
+              <ArrowRight className="w-3 h-3 text-amber-300" />
+            </button>
+          </form>
+        )}
+
+        {/* RBAC Session & Navigation Controls */}
+        <div className="flex items-center gap-2.5">
+          {isAuthenticated && user ? (
+            <>
+              {/* CITIZEN ROLE CONTROLS */}
+              {isCitizen && (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to={`/citizen/family/${user.id}`}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-300 text-slate-800 text-xs font-semibold hover:bg-amber-100 transition-colors shadow-xs"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold">
+                      {user.avatar || 'VT'}
+                    </div>
+                    <span className="hidden sm:inline">{user.name}</span>
+                    <span className="font-mono text-[10px] font-bold text-amber-900 bg-amber-200/60 px-1 py-0.2 rounded">
+                      {user.id}
+                    </span>
+                  </Link>
+
+                  <Link
+                    to="/login"
+                    className="text-xs text-slate-500 hover:text-navy px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 transition-colors"
+                    title="Switch Role"
+                  >
+                    Switch
+                  </Link>
+                </div>
+              )}
+
+              {/* OFFICER ROLE CONTROLS */}
+              {isOfficer && (
+                <div className="flex items-center gap-2">
+                  {/* Context-aware Citizen View link for Officer auditing */}
+                  {activeFamilyId && (
+                    <Link
+                      to={officerFamilyMatch ? `/citizen/family/${activeFamilyId}` : `/officer/families/${activeFamilyId}`}
+                      className="text-xs font-bold px-2.5 py-1.5 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-slate-800 transition-colors flex items-center gap-1.5 shadow-xs"
+                      title={officerFamilyMatch ? "Inspect Citizen Self-Service View" : "Return to Official Audit"}
+                    >
+                      <span className="hidden sm:inline">{officerFamilyMatch ? 'Citizen View:' : 'Officer Audit:'}</span>
+                      <span className="font-mono text-[11px] font-bold text-amber-900">{activeFamilyId}</span>
+                      <ExternalLink className="w-3 h-3 text-[#FF671F]" />
+                    </Link>
+                  )}
+
+                  <Link
+                    to="/officer/dashboard"
+                    className="text-xs font-bold text-white bg-navy hover:bg-navy-dark px-3 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+                  >
+                    <span>Console</span>
+                    <ArrowRight className="w-3 h-3 text-[#FF671F]" />
+                  </Link>
+
+                  {/* Officer Badge */}
+                  <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="font-semibold text-slate-700">{user.name?.split(' ')[0]}</span>
+                    <span className="text-[10px] text-slate-400 uppercase font-mono">({role?.replace('_', ' ')})</span>
+                  </div>
+
+                  <Link
+                    to="/login"
+                    className="text-xs text-slate-500 hover:text-navy px-2 py-1 rounded border border-slate-200 hover:bg-slate-50 transition-colors"
+                    title="Switch Officer Role"
+                  >
+                    Switch
+                  </Link>
+                </div>
+              )}
+            </>
           ) : (
-            <Link
-              to="/officer/dashboard"
-              className="text-xs font-bold text-white bg-navy hover:bg-navy-dark px-3 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
-            >
-              <span>{t('officer_console', lang)}</span>
-              <ArrowRight className="w-3 h-3 text-[#FF671F]" />
-            </Link>
+            /* UNAUTHENTICATED CONTROLS */
+            <div className="flex items-center gap-2">
+              <Link
+                to="/login?role=citizen"
+                className="text-xs font-bold px-3 py-1.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 transition-all flex items-center gap-1.5 shadow-xs"
+              >
+                <User className="w-3.5 h-3.5 text-[#FF671F]" />
+                <span>Citizen Login</span>
+              </Link>
+              <Link
+                to="/login?role=district"
+                className="text-xs font-bold text-white bg-navy hover:bg-navy-dark px-3 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <Shield className="w-3.5 h-3.5 text-amber-300" />
+                <span>Officer Login</span>
+              </Link>
+            </div>
           )}
-
-          {/* Unified RBAC Login / Role Switcher Gateway */}
-          <Link
-            to="/login"
-            className="text-xs font-bold px-2.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-navy border border-amber-500/30 transition-all flex items-center gap-1.5 shadow-xs"
-            title="Switch Role or Authenticate via State SSO Gateway"
-          >
-            <Shield className="w-3.5 h-3.5 text-[#FF671F]" />
-            <span className="hidden md:inline">RBAC Login</span>
-            <span className="md:hidden">Login</span>
-          </Link>
         </div>
       </div>
     </header>

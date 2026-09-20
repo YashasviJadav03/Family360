@@ -10,16 +10,25 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS middleware configuration for frontend (localhost:5173 and preview origins)
+from app.core.config import settings
+
+# CORS middleware configuration for frontend (supports local dev and deployed cloud origins)
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://localhost:8000",
+]
+if settings.ALLOWED_ORIGINS:
+    for origin in settings.ALLOWED_ORIGINS.split(","):
+        origin_clean = origin.strip()
+        if origin_clean and origin_clean not in origins:
+            origins.append(origin_clean)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "*",
-    ],
+    allow_origins=origins,
+    allow_origin_regex=r"https://.*\.onrender\.com|https://.*\.vercel\.app|https://.*\.netlify\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

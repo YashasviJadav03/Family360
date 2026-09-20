@@ -105,3 +105,16 @@ Use these curated IDs in the Citizen Portal to test specific flows:
 | **Frontend** | React 18, Vite, Lucide React, Recharts |
 | **Deduplication** | RapidFuzz (Token Sort, Jaro-Winkler) with Blocking Keys |
 | **AI Layer** | OpenAI / Gemini API (strictly for explanation generation) |
+
+---
+
+## 🚀 Production Deployment
+
+Family360 is configured for 1-click automated deployment or manual cloud hosting:
+
+1. **Database Deployment**: PostgreSQL is **required** (Render PostgreSQL, Supabase, or Neon).
+2. **Backend**: FastAPI web service with automatic database migrations and initial demo data seeding via `start.sh`.
+3. **Frontend**: React + Vite single-page application connecting to the backend via `VITE_API_BASE_URL`.
+
+👉 Read the complete step-by-step instructions in the [Production Deployment Guide](file:///d:/Family360/docs/DEPLOYMENT_GUIDE.md) or deploy using Render Blueprints via [`render.yaml`](file:///d:/Family360/render.yaml).
+

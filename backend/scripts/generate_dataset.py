@@ -7,7 +7,8 @@ import pandas as pd
 from faker import Faker
 
 # Add backend root to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, BASE_DIR)
 
 from app.db.session import SessionLocal, engine
 from app.models.family import Family
@@ -111,8 +112,10 @@ def main():
 
     # 1. Load Schemes Master & Eligibility Rules
     print("Loading schemes and eligibility rules from CSVs...")
-    schemes_df = pd.read_csv("data/raw/schemes_master.csv")
-    rules_df = pd.read_csv("data/raw/eligibility_rules.csv")
+    schemes_csv = os.path.join(BASE_DIR, "data", "raw", "schemes_master.csv")
+    rules_csv = os.path.join(BASE_DIR, "data", "raw", "eligibility_rules.csv")
+    schemes_df = pd.read_csv(schemes_csv)
+    rules_df = pd.read_csv(rules_csv)
 
     scheme_objects = []
     for _, row in schemes_df.iterrows():
@@ -158,8 +161,8 @@ def main():
     db.bulk_save_objects(officers)
     db.commit()
 
-    # 3. Generate 3000 Families & Members
-    N_FAMILIES = 3000
+    # 3. Generate Families & Members
+    N_FAMILIES = int(os.getenv("SEED_FAMILIES_COUNT", "3000"))
     print(f"Generating {N_FAMILIES} families and demographic members...")
 
     # Log-normal annual income with median ~180,000
@@ -478,8 +481,9 @@ def main():
 
     # Save known member record clusters to scratch for ground truth duplicate pairs generation
     import json
-    os.makedirs("data/generated", exist_ok=True)
-    with open("data/generated/member_records_map.json", "w") as f:
+    gen_dir = os.path.join(BASE_DIR, "data", "generated")
+    os.makedirs(gen_dir, exist_ok=True)
+    with open(os.path.join(gen_dir, "member_records_map.json"), "w") as f:
         json.dump(known_member_records, f)
 
     print("\n" + "=" * 60)

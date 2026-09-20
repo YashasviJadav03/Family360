@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Award, FileCheck, BookOpen, Bot,
-  LogOut, Shield, Globe, Bell, ChevronRight, Menu, X, ExternalLink, MapPin, RefreshCw
+  LogOut, Shield, Globe, Bell, ChevronRight, Menu, X, ExternalLink, MapPin, RefreshCw, Lock
 } from 'lucide-react';
 import NationalGovHeader from './NationalGovHeader';
 import NationalGovFooter from './NationalGovFooter';
@@ -17,12 +17,12 @@ export default function OfficerLayout({ children }) {
   const [lang, setLang] = useState('en');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navItems = [
-    { label: 'Overview', path: '/officer/dashboard', icon: LayoutDashboard },
-    { label: 'Family Registry', path: '/officer/families', icon: Users },
-    { label: 'Saturation Camps', path: '/officer/camps', icon: MapPin, badge: 'Hotspots' },
-    { label: 'Review Queue', path: '/officer/duplicates', icon: FileCheck, badge: '3,356' },
-    { label: 'Scheme Directory', path: '/officer/schemes', icon: BookOpen },
+  const allNavItems = [
+    { label: 'Overview', path: '/officer/dashboard', icon: LayoutDashboard, roles: ['taluka_officer', 'district_officer', 'state_admin'] },
+    { label: 'Family Registry', path: '/officer/families', icon: Users, roles: ['taluka_officer', 'district_officer', 'state_admin'] },
+    { label: 'Saturation Camps', path: '/officer/camps', icon: MapPin, badge: 'Hotspots', roles: ['taluka_officer', 'district_officer', 'state_admin'] },
+    { label: 'Review Queue', path: '/officer/duplicates', icon: FileCheck, badge: '3,356', roles: ['district_officer', 'state_admin'], requiredRoleLabel: 'District+' },
+    { label: 'Scheme Directory', path: '/officer/schemes', icon: BookOpen, roles: ['taluka_officer', 'district_officer', 'state_admin'] },
   ];
 
   const toggleLanguage = () => {
@@ -106,11 +106,31 @@ export default function OfficerLayout({ children }) {
               Administrative Views
             </div>
 
-            {navItems.map((item) => {
+            {allNavItems.map((item) => {
               const Icon = item.icon;
               const isActive =
                 location.pathname === item.path ||
                 (item.path === '/officer/families' && location.pathname.startsWith('/officer/families'));
+              const isLocked = item.roles && !item.roles.includes(user?.role);
+
+              if (isLocked) {
+                return (
+                  <div
+                    key={item.path}
+                    className="flex items-center justify-between px-3 py-2 rounded text-xs font-medium text-slate-400/80 bg-navy-dark/40 border border-white/5 cursor-not-allowed select-none opacity-65"
+                    title={`Restricted to ${item.requiredRoleLabel || 'Higher Authority'} by State RBAC`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className="w-4 h-4 text-slate-500" />
+                      <span className="text-slate-400">{item.label}</span>
+                    </div>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-300 font-mono flex items-center gap-1 border border-amber-500/20">
+                      <Lock className="w-2.5 h-2.5 text-[#FF671F]" />
+                      <span>{item.requiredRoleLabel || 'Locked'}</span>
+                    </span>
+                  </div>
+                );
+              }
 
               return (
                 <Link
