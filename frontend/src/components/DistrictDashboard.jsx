@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  Users, AlertCircle, FileCheck, ClipboardList, TrendingUp,
-  Download, ArrowUpRight, CheckCircle2, ShieldAlert, Clock
+  Users, AlertCircle, FileCheck, CheckCircle2, TrendingUp,
+  Download, ArrowUpRight, ShieldAlert
 } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -28,10 +28,8 @@ export default function DistrictDashboard({
   const totalFamilies = data.total_families || 3000;
   const totalGaps = data.total_eligible_unserved || 2639;
 
-  // Custom colors matching DPI palette
   const CATEGORY_COLORS = ['#172B63', '#F58220', '#16805C', '#175CD3', '#8E24AA', '#546E7A'];
 
-  // Static scheme category breakdown for the pie chart
   const categoryData = [
     { name: 'Education', value: 3 },
     { name: 'Social Security', value: 2 },
@@ -41,54 +39,36 @@ export default function DistrictDashboard({
     { name: 'Economic', value: 1 },
   ];
 
-  // Benefit coverage rates for the signature horizontal bars
   const coverageMetrics = [
     { category: 'Education Scholarships', rate: 78, beneficiaries: '2,340', target: '3,000' },
-    { category: 'Women & Child (Ganga Swarupa)', rate: 71, beneficiaries: '1,420', target: '2,000' },
+    { category: 'Women & Child', rate: 71, beneficiaries: '1,420', target: '2,000' },
     { category: 'Housing Assistance', rate: 64, beneficiaries: '1,280', target: '2,000' },
     { category: 'Social Security / Pensions', rate: 58, beneficiaries: '980', target: '1,690' },
-    { category: 'Divyang / Disability Support', rate: 49, beneficiaries: '420', target: '850' },
+    { category: 'Disability Support', rate: 49, beneficiaries: '420', target: '850' },
     { category: 'Economic / Self-Employment', rate: 42, beneficiaries: '380', target: '900' },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Officer Hero Banner with Official Gujarat State Identity */}
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm gov-card-saffron relative overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-4 relative z-10">
-          <div className="flex items-start gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-navy to-navy-dark text-white flex flex-col items-center justify-center shadow-md border-2 border-amber-400 shrink-0">
-              <div className="flex items-center gap-0.5 mb-0.5">
-                <span className="w-1 h-1 rounded-full bg-orange-500"></span>
-                <span className="w-1 h-1 rounded-full bg-white"></span>
-                <span className="w-1 h-1 rounded-full bg-emerald-500"></span>
-              </div>
-              <span className="text-[9px] font-black text-amber-300 font-mono">DPI</span>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="gov-stamp">DIRECTORATE OF SOCIAL JUSTICE</span>
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  Government of Gujarat · Digital Public Infrastructure
-                </span>
-              </div>
-              <h2 className="text-lg sm:text-xl font-black text-navy tracking-tight">
-                District Social Welfare Command Center (જિલ્લા સમાજ કલ્યાણ કન્સોલ)
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Proactive Entitlement Reconciliation & Civil Registry Quality · Real-time State MIS Synchronization
-              </p>
-            </div>
+      {/* Header */}
+      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-black text-navy tracking-tight">
+              District Welfare Command Center
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Proactive entitlement reconciliation across 10 administrative zones
+            </p>
           </div>
 
           <div className="flex items-center gap-2.5">
             <select
               value={selectedDistrict}
               onChange={(e) => onSelectDistrict(e.target.value)}
-              className="text-xs px-3 py-2 border-2 border-slate-200 rounded-lg bg-slate-50 text-slate-800 font-bold focus:outline-none focus:border-navy shadow-inner"
+              className="text-xs px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-800 font-bold focus:outline-none focus:border-navy"
             >
-              <option value="All">All Gujarat Districts (10)</option>
+              <option value="All">All Districts (10)</option>
               {districts.map((d) => (
                 <option key={d.district} value={d.district}>
                   {d.district} ({d.total_families} families)
@@ -97,158 +77,105 @@ export default function DistrictDashboard({
             </select>
 
             <button
-              onClick={() => alert('Generating Official Gujarat District Social Welfare MIS Audit Slip...')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-navy hover:bg-orange rounded-lg transition-colors shadow-sm"
+              onClick={() => alert('Generating MIS Audit Slip...')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-white bg-navy hover:bg-navy-dark rounded-lg transition-colors shadow-sm"
             >
               <Download className="w-3.5 h-3.5 text-amber-300" />
-              <span>Export MIS Slip</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Curated Hero Demonstrations Ribbon */}
-        <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-1.5 text-slate-700 font-bold">
-            <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping"></span>
-            <span>⚡ Audit Showcase (1-Click Inspection):</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={() => (window.location.href = '/officer/families/GJ-F000525')}
-              className="px-2.5 py-1 rounded bg-orange-50 hover:bg-orange-100 text-orange-950 border border-orange-300 font-bold transition-all shadow-xs flex items-center gap-1"
-            >
-              <span>GJ-F000525 (Housing Gap · ₹1.2L)</span>
-              <ArrowUpRight className="w-3 h-3 text-orange-600" />
-            </button>
-
-            <button
-              onClick={() => (window.location.href = '/officer/families/GJ-F001954')}
-              className="px-2.5 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-950 border border-blue-300 font-bold transition-all shadow-xs flex items-center gap-1"
-            >
-              <span>GJ-F001954 (Senior Pension)</span>
-              <ArrowUpRight className="w-3 h-3 text-blue-600" />
-            </button>
-
-            <button
-              onClick={() => (window.location.href = '/officer/families/GJ-F000049')}
-              className="px-2.5 py-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 font-bold transition-all shadow-xs flex items-center gap-1"
-            >
-              <span>GJ-F000049 (Full Entitlements)</span>
-              <ArrowUpRight className="w-3 h-3 text-emerald-600" />
-            </button>
-
-            <button
-              onClick={() => (window.location.href = '/officer/families/GJ-F000012')}
-              className="px-2.5 py-1 rounded bg-purple-50 hover:bg-purple-100 text-purple-950 border border-purple-300 font-bold transition-all shadow-xs flex items-center gap-1"
-            >
-              <span>GJ-F000012 (Education Stipend)</span>
-              <ArrowUpRight className="w-3 h-3 text-purple-600" />
+              <span>Export MIS</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* 4 Crisp KPI Cards with Authentic Gov Color Top Borders */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* KPI 1: Families (Navy & Gold) */}
-        <div className="card-dpi p-4.5 bg-white border border-slate-200 gov-card-navy gov-card-interactive shadow-sm">
+        <div className="card-dpi p-4 bg-white border border-slate-200 shadow-sm" style={{ borderTop: '3px solid #172B63' }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Families Registered</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-navy shadow-xs">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-navy">
               <Users className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl font-black font-mono text-navy">{totalFamilies.toLocaleString('en-IN')}</p>
-          <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1 font-semibold">
-            <span className="text-emerald-700 font-bold">↑ 100% Verified</span>
-            <span>State population coverage</span>
+          <p className="text-[11px] text-slate-500 mt-1 font-medium">
+            <span className="text-emerald-700 font-bold">↑ 100% Verified</span> · State coverage
           </p>
         </div>
 
-        {/* KPI 2: Benefit Gaps (Saffron & Amber) */}
         <div
-          className="card-dpi p-4.5 bg-gradient-to-br from-white to-orange-50/40 border-2 border-orange-300 gov-card-saffron gov-card-interactive shadow-sm cursor-pointer"
+          className="card-dpi p-4 bg-white border-2 border-orange-300 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+          style={{ borderTop: '3px solid #F58220' }}
           onClick={() => onNavigateTo('families')}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-orange-950 flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping"></span>
-              Benefit Gaps
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-orange-100 border border-orange-300 flex items-center justify-center text-orange-800 shadow-xs">
+            <span className="text-xs font-bold uppercase tracking-wider text-orange-900">Benefit Gaps</span>
+            <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center text-orange-800">
               <AlertCircle className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl font-black font-mono text-orange-950">{totalGaps.toLocaleString('en-IN')}</p>
-          <p className="text-[11px] text-orange-900 mt-1 flex items-center gap-1 font-bold">
+          <p className="text-[11px] text-orange-900 mt-1 flex items-center gap-1 font-medium">
             <span>Eligible unserved households</span>
             <ArrowUpRight className="w-3.5 h-3.5 ml-auto text-orange-700" />
           </p>
         </div>
 
-        {/* KPI 3: Records to Review (Royal Blue) */}
         <div
-          className="card-dpi p-4.5 bg-gradient-to-br from-white to-blue-50/30 border border-slate-200 gov-card-interactive shadow-sm cursor-pointer hover:border-blue-400"
-          style={{ borderTop: '4px solid #1D4ED8' }}
+          className="card-dpi p-4 bg-white border border-slate-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+          style={{ borderTop: '3px solid #1D4ED8' }}
           onClick={() => onNavigateTo('duplicates')}
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-blue-950">Review Queue</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-800 shadow-xs">
+            <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-800">
               <FileCheck className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl font-black font-mono text-blue-950">3,356</p>
-          <p className="text-[11px] text-blue-900 mt-1 flex items-center gap-1 font-bold">
+          <p className="text-[11px] text-blue-900 mt-1 flex items-center gap-1 font-medium">
             <span>Identity & address clashes</span>
             <ArrowUpRight className="w-3.5 h-3.5 ml-auto text-blue-700" />
           </p>
         </div>
 
-        {/* KPI 4: Pending Applications (Emerald Green) */}
-        <div
-          className="card-dpi p-4.5 bg-gradient-to-br from-white to-emerald-50/30 border border-slate-200 gov-card-green gov-card-interactive shadow-sm"
-        >
+        <div className="card-dpi p-4 bg-white border border-slate-200 shadow-sm" style={{ borderTop: '3px solid #16805C' }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-950">Active Entitlements</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800 shadow-xs">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-800">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
           <p className="text-2xl font-black font-mono text-emerald-950">₹4.82 Cr</p>
-          <p className="text-[11px] text-emerald-900 mt-1 flex items-center gap-1 font-semibold">
-            <span className="text-emerald-700 font-bold">✓ PFMS / DBT Active</span>
-            <span>Annual disbursements</span>
+          <p className="text-[11px] text-emerald-900 mt-1 font-medium">
+            <span className="text-emerald-700 font-bold">✓ DBT Active</span> · Annual disbursements
           </p>
         </div>
       </div>
 
-      {/* Cross-Registry Data Quality & Profile Completeness Telemetry */}
+      {/* Data Quality */}
       <DataQualityPanel />
 
-      {/* Signature Section: Benefit Coverage Overview & Action Required */}
+      {/* Benefit Coverage & Action Required */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Horizontal Bars: Benefit Coverage */}
         <div className="lg:col-span-2 card-dpi p-5 bg-white">
           <div className="flex items-center justify-between mb-4 border-b border-slate-border pb-3">
             <div>
               <h3 className="text-sm font-bold text-slate-text">Benefit Coverage Overview</h3>
               <p className="text-xs text-slate-secondary">
-                Ratio of eligible households currently receiving designated scheme benefits
+                Eligible households currently receiving scheme benefits
               </p>
             </div>
-            <span className="text-xs text-slate-500 font-mono">11 Schemes Tracked</span>
+            <span className="text-xs text-slate-500 font-mono">11 Schemes</span>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {coverageMetrics.map((item, idx) => (
               <div key={idx} className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-slate-text">{item.category}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-slate-secondary text-[11px]">
-                      {item.beneficiaries} / {item.target} households
+                      {item.beneficiaries} / {item.target}
                     </span>
                     <span className="font-mono font-bold text-navy w-8 text-right">
                       {item.rate}%
@@ -272,7 +199,7 @@ export default function DistrictDashboard({
           </div>
         </div>
 
-        {/* Action Required Panel */}
+        {/* Action Required */}
         <div className="card-dpi p-5 bg-white flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-3 border-b border-slate-border pb-2.5">
@@ -314,11 +241,11 @@ export default function DistrictDashboard({
 
               <div className="p-3 rounded border border-slate-border bg-slate-50/70">
                 <div className="flex items-center justify-between font-semibold text-slate-text">
-                  <span>Incomplete Civil Profiles</span>
+                  <span>Incomplete Profiles</span>
                   <span className="font-mono text-sm">361</span>
                 </div>
                 <p className="text-[11px] text-slate-secondary mt-0.5">
-                  Missing ration or occupation markers for full evaluation
+                  Missing ration or occupation data
                 </p>
               </div>
 
@@ -328,7 +255,7 @@ export default function DistrictDashboard({
                   <span className="font-mono text-sm">184</span>
                 </div>
                 <p className="text-[11px] text-slate-secondary mt-0.5">
-                  Pending district officer verification &gt; 7 days
+                  Pending verification &gt; 7 days
                 </p>
               </div>
             </div>
@@ -336,20 +263,19 @@ export default function DistrictDashboard({
 
           <div className="pt-3 border-t border-slate-border text-center">
             <span className="text-[11px] text-slate-400">
-              Assigned to Taluka Welfare Officers for physical verification
+              Assigned to Taluka Welfare Officers for verification
             </span>
           </div>
         </div>
       </div>
 
-      {/* Analytics Row: District Distribution & Scheme Breakdown */}
+      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* District Chart */}
         <div className="lg:col-span-2 card-dpi p-5 bg-white">
           <div className="flex items-center justify-between mb-4 border-b border-slate-border pb-3">
             <div>
-              <h3 className="text-sm font-bold text-slate-text">Families with Potential Benefit Gaps by District</h3>
-              <p className="text-xs text-slate-secondary">Aggregated across all 10 monitored administrative zones</p>
+              <h3 className="text-sm font-bold text-slate-text">Benefit Gaps by District</h3>
+              <p className="text-xs text-slate-secondary">Across 10 administrative zones</p>
             </div>
           </div>
 
@@ -381,12 +307,11 @@ export default function DistrictDashboard({
           </div>
         </div>
 
-        {/* Scheme Categories Pie Chart */}
         <div className="card-dpi p-5 bg-white">
           <div className="flex items-center justify-between mb-4 border-b border-slate-border pb-3">
             <div>
               <h3 className="text-sm font-bold text-slate-text">Schemes by Category</h3>
-              <p className="text-xs text-slate-secondary">Distribution of 11 welfare initiatives</p>
+              <p className="text-xs text-slate-secondary">11 welfare initiatives</p>
             </div>
           </div>
 
@@ -427,7 +352,7 @@ export default function DistrictDashboard({
         </div>
       </div>
 
-      {/* Natural-Language Officer Query Assistant Panel */}
+      {/* Assistant Panel */}
       <AssistantPanel />
     </div>
   );

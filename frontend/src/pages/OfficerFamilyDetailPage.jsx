@@ -81,8 +81,8 @@ export default function OfficerFamilyDetailPage() {
       <OfficerLayout>
         <div className="card-dpi p-16 text-center bg-white border border-slate-border">
           <div className="w-10 h-10 border-3 border-navy border-t-[#FF671F] rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-sm font-semibold text-navy">Accessing Gujarat Family ID Registry...</p>
-          <p className="text-xs text-slate-secondary mt-1">Cross-referencing civil registries & evaluating 11 welfare rules</p>
+          <p className="text-sm font-semibold text-navy">Loading family record...</p>
+          <p className="text-xs text-slate-secondary mt-1">Evaluating welfare eligibility rules</p>
         </div>
       </OfficerLayout>
     );
@@ -177,13 +177,9 @@ export default function OfficerFamilyDetailPage() {
         </div>
 
         {/* Hero Family 360 Card with Official Government Accent */}
-        <div className="card-dpi gov-card-saffron p-6 bg-white border border-slate-border relative overflow-hidden">
-          {/* Subtle background seal watermark */}
-          <div className="absolute right-4 top-2 text-slate-100 font-serif font-black text-7xl select-none pointer-events-none opacity-40">
-            360
-          </div>
+        <div className="card-dpi p-5 bg-white border border-slate-200 shadow-sm" style={{ borderTop: '3px solid #FF671F' }}>
 
-          <div className="flex flex-wrap items-start justify-between gap-5 relative z-10">
+          <div className="flex flex-wrap items-start justify-between gap-5">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="bg-[#FF671F] text-white font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
@@ -218,7 +214,7 @@ export default function OfficerFamilyDetailPage() {
                 <span className="text-lg font-black font-mono text-orange-950">
                   {family.family_size} Members
                 </span>
-                <span className="text-[10px] text-orange-700 block mt-0.5">Civil Registry</span>
+
               </div>
 
               {/* Card 2: Annual Income (Navy Accent) */}
@@ -243,7 +239,7 @@ export default function OfficerFamilyDetailPage() {
                 <span className="text-lg font-black font-mono text-emerald-950">
                   {receivingCount} Schemes
                 </span>
-                <span className="text-[10px] text-emerald-700 block mt-0.5">Disbursed DBT</span>
+
               </div>
 
               {/* Card 4: Actionable Gaps (Vibrant Amber / Crimson Glow) */}
@@ -252,9 +248,7 @@ export default function OfficerFamilyDetailPage() {
                   ? 'bg-amber-100/90 border-amber-400 text-amber-950 shadow-sm'
                   : 'bg-slate-50 border-slate-200 text-slate-600'
               }`}>
-                {gapCount > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-red-500 gov-pulse"></span>
-                )}
+
                 <span className="text-[10px] font-extrabold uppercase tracking-wider block flex items-center justify-center gap-1 text-amber-900">
                   <AlertCircle className="w-3 h-3 text-amber-700" />
                   Benefit Gaps
@@ -273,11 +267,11 @@ export default function OfficerFamilyDetailPage() {
         {/* Interactive Government Navigation Tabs */}
         <div className="bg-white p-1 rounded-xl border border-slate-border shadow-xs flex items-center gap-1.5 overflow-x-auto">
           {[
-            { id: 'overview', label: 'Overview & Kinship Graph', count: null, color: 'bg-navy' },
-            { id: 'benefits', label: 'Benefits & Gaps Matrix', count: gapCount > 0 ? `${gapCount} Gaps` : 'All Set', color: gapCount > 0 ? 'bg-[#FF671F]' : 'bg-emerald-600' },
-            { id: 'members', label: 'Household Members', count: family.members?.length || 0, color: 'bg-blue-600' },
-            { id: 'applications', label: 'Application Workflow', count: applications.length, color: 'bg-purple-600' },
-            { id: 'identity', label: 'Departmental Data Feeds', count: identityRecords.length, color: 'bg-slate-600' },
+            { id: 'overview', label: 'Overview', count: null, color: 'bg-navy' },
+            { id: 'benefits', label: 'Benefits & Gaps', count: gapCount > 0 ? `${gapCount} Gaps` : null, color: gapCount > 0 ? 'bg-[#FF671F]' : 'bg-emerald-600' },
+            { id: 'members', label: 'Members', count: family.members?.length || 0, color: 'bg-blue-600' },
+            { id: 'applications', label: 'Applications', count: applications.length, color: 'bg-purple-600' },
+            { id: 'identity', label: 'Data Sources', count: identityRecords.length, color: 'bg-slate-600' },
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -309,11 +303,11 @@ export default function OfficerFamilyDetailPage() {
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left: Family Profile Details */}
-            <div className="card-dpi gov-card-navy p-5 bg-white space-y-4">
+            <div className="card-dpi p-5 bg-white space-y-4" style={{ borderTop: '3px solid #172B63' }}>
               <div className="border-b border-slate-border pb-3 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-navy">Socio-Economic Attributes</h3>
-                  <p className="text-[11px] text-slate-500">Statutory parameters evaluated against scheme criteria</p>
+                  <h3 className="text-sm font-bold text-navy">Family Attributes</h3>
+                  <p className="text-[11px] text-slate-500">Economic & demographic parameters</p>
                 </div>
                 <span className="text-[10px] font-bold font-mono bg-blue-50 text-navy px-2 py-0.5 rounded border border-blue-200">
                   DPI Verified
@@ -355,16 +349,7 @@ export default function OfficerFamilyDetailPage() {
                 </div>
               </div>
 
-              {/* Administrative Compliance Callout */}
-              <div className="p-3.5 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50/60 border border-blue-200 text-xs space-y-1.5">
-                <div className="flex items-center gap-1.5 text-navy font-bold">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Statutory Entitlement Note</span>
-                </div>
-                <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Household economic parameters are evaluated deterministically by the Family360 rule engine against current Gujarat Social Justice policies. No discretionary decision drift is permitted.
-                </p>
-              </div>
+
             </div>
 
             {/* Right: Interactive Family Kinship Graph */}
@@ -396,8 +381,8 @@ export default function OfficerFamilyDetailPage() {
             <div className="lg:col-span-2 card-dpi p-5 bg-white border border-slate-border space-y-4">
               <div className="border-b border-slate-border pb-3 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-navy">Household Members Directory</h3>
-                  <p className="text-xs text-slate-500">Click any individual to inspect linked cross-registry data</p>
+                  <h3 className="text-sm font-bold text-navy">Household Members</h3>
+                  <p className="text-xs text-slate-500">Click any member to view details</p>
                 </div>
                 <span className="text-xs font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-700">
                   {family.members?.length} Registered
@@ -465,10 +450,10 @@ export default function OfficerFamilyDetailPage() {
 
             {/* Right: Selected Member Inspector Card */}
             {selectedMember && (
-              <div className="card-dpi gov-card-saffron p-5 bg-white border border-slate-border space-y-4">
+              <div className="card-dpi p-5 bg-white border border-slate-200 space-y-4" style={{ borderTop: '3px solid #FF671F' }}>
                 <div className="border-b border-slate-border pb-3">
                   <span className="text-[10px] font-mono font-bold text-[#FF671F] uppercase tracking-wider block">
-                    Individual Beneficiary Focus
+                    Member Details
                   </span>
                   <h3 className="text-base font-bold text-navy">{selectedMember.name}</h3>
                   <p className="text-xs text-slate-500">ID: {selectedMember.member_id}</p>
@@ -516,11 +501,11 @@ export default function OfficerFamilyDetailPage() {
 
         {/* TAB 4: In-Flight Scheme Applications */}
         {activeTab === 'applications' && (
-          <div className="card-dpi gov-card-navy p-5 bg-white border border-slate-border space-y-4">
+          <div className="card-dpi p-5 bg-white border border-slate-200 space-y-4" style={{ borderTop: '3px solid #172B63' }}>
             <div className="border-b border-slate-border pb-3 flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-navy">Administrative Entitlement Applications</h3>
-                <p className="text-xs text-slate-500">Officer verification workflow & Direct Benefit Transfer tracking</p>
+                <h3 className="text-sm font-bold text-navy">Applications</h3>
+                <p className="text-xs text-slate-500">Scheme applications & verification workflow</p>
               </div>
               <button
                 onClick={() => setActiveTab('benefits')}
@@ -604,19 +589,19 @@ export default function OfficerFamilyDetailPage() {
 
         {/* TAB 5: Data Sources & Departmental Footprints */}
         {activeTab === 'identity' && (
-          <div className="card-dpi gov-card-saffron p-5 bg-white border border-slate-border space-y-4">
+          <div className="card-dpi p-5 bg-white border border-slate-200 space-y-4" style={{ borderTop: '3px solid #FF671F' }}>
             <div className="border-b border-slate-border pb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-navy flex items-center gap-2">
                   <Database className="w-4 h-4 text-[#FF671F]" />
-                  <span>Line-Department Civil Identity Footprints</span>
+                  <span>Departmental Data Sources</span>
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Raw identity records ingested from Ration, Scholarship, Housing, and Health MIS registries feeding Entity Resolution
+                  Identity records from Ration, Scholarship, Housing, and Health registries
                 </p>
               </div>
               <span className="text-xs font-mono font-bold bg-blue-50 text-navy px-2.5 py-1 rounded border border-blue-200">
-                {identityRecords.length} Cross-System Records
+                {identityRecords.length} Records
               </span>
             </div>
 
