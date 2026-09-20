@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   Users, CheckCircle2, AlertCircle, ArrowLeft, Globe, Send,
-  FileCheck, IndianRupee, MapPin, ChevronRight, ShieldCheck
+  FileCheck, IndianRupee, MapPin, ChevronRight, ShieldCheck, Building2
 } from 'lucide-react';
+import NationalGovHeader from '../components/NationalGovHeader';
+import NationalGovFooter from '../components/NationalGovFooter';
 import { familyApi, applicationApi } from '../api/client';
 
 export default function CitizenDashboard() {
@@ -33,7 +35,7 @@ export default function CitizenDashboard() {
         if (mounted) {
           setError(
             lang === 'en'
-              ? `We couldn't find Family ID "${familyId}". Please check the number or contact your local Taluka Gram Panchayat.`
+              ? `We couldn't find Family ID "${familyId}". Please check the identifier or contact your local Taluka Gram Panchayat.`
               : `અમને ફેમિલી આઈડી "${familyId}" મળ્યો નથી. કૃપા કરીને આઈડી ચકાસો અથવા તમારા તાલુકા પંચાયતનો સંપર્ક કરો.`
           );
         }
@@ -61,234 +63,232 @@ export default function CitizenDashboard() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-bg flex items-center justify-center p-4 text-center">
-        <div className="space-y-3">
-          <div className="w-8 h-8 border-2 border-navy border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-xs text-slate-secondary">
-            {lang === 'en' ? 'Fetching official family welfare records...' : 'પરિવારની કલ્યાણકારી વિગતો લોડ થઈ રહી છે...'}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !family) {
-    return (
-      <div className="min-h-screen bg-slate-bg flex items-center justify-center p-4">
-        <div className="card-dpi p-6 max-w-md w-full bg-white text-center">
-          <AlertCircle className="w-10 h-10 text-amber-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-slate-text mb-2">
-            {lang === 'en' ? 'Family Record Not Found' : 'પરિવારનો રેકોર્ડ મળ્યો નથી'}
-          </h3>
-          <p className="text-xs text-slate-secondary mb-4 leading-relaxed">{error}</p>
-          <Link
-            to="/citizen/login"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded text-xs font-semibold text-white bg-navy hover:bg-navy-dark"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{lang === 'en' ? 'Try Another Family ID' : 'બીજો આઈડી દાખલ કરો'}</span>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const receiving = gapReport?.receiving_schemes || [];
-  const gaps = gapReport?.gap_schemes || [];
-
   return (
-    <div className="min-h-screen bg-slate-bg flex flex-col justify-between">
-      {/* Reassuring Top Navigation */}
-      <header className="bg-navy text-white px-4 sm:px-6 py-3 sticky top-0 z-30 flex items-center justify-between border-b border-navy-dark">
-        <Link to="/citizen/login" className="flex items-center gap-2 text-xs font-medium text-slate-200 hover:text-white">
-          <ArrowLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">{lang === 'en' ? 'Back' : 'પાછા'}</span>
-        </Link>
-
-        <div className="text-center">
-          <span className="text-xs font-mono font-semibold bg-white/10 px-2 py-0.5 rounded text-orange-light">
-            {family.family_id}
-          </span>
-          <span className="text-[11px] text-slate-300 ml-2 hidden sm:inline">
-            {family.village}, {family.district}
-          </span>
-        </div>
-
-        <button
-          onClick={() => setLang(lang === 'en' ? 'gu' : 'en')}
-          className="flex items-center gap-1 text-xs bg-white/10 hover:bg-white/15 px-2.5 py-1 rounded transition-colors"
-        >
-          <Globe className="w-3.5 h-3.5 text-orange" />
-          <span>{lang === 'en' ? 'ગુજરાતી' : 'English'}</span>
-        </button>
-      </header>
+    <div className="min-h-screen bg-[#F6F8FC] flex flex-col justify-between text-slate-text">
+      {/* Official Government Top Bar & Header */}
+      <NationalGovHeader
+        lang={lang}
+        onToggleLang={() => setLang((prev) => (prev === 'en' ? 'gu' : 'en'))}
+        currentRole="citizen"
+      />
 
       {/* Main Content Area */}
-      <main className="max-w-2xl mx-auto px-4 py-6 w-full flex-1 space-y-5">
-        {/* Reassuring Welcome Summary */}
-        <div className="card-dpi p-5 bg-white">
-          <div className="flex items-center gap-2 text-xs font-semibold text-navy mb-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>{lang === 'en' ? 'Verified Gujarat Family Record' : 'ચકાસાયેલ ગુજરાત ફેમિલી રેકોર્ડ'}</span>
-          </div>
-
-          <h2 className="text-lg font-bold text-slate-text">
-            {lang === 'en'
-              ? `Welfare Entitlements for ${family.head_name || 'Your Household'}`
-              : `${family.head_name || 'તમારા પરિવાર'} માટે સરકારી કલ્યાણ સહાય`}
-          </h2>
-
-          <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-slate-border text-xs text-slate-secondary">
-            <span className="flex items-center gap-1 font-medium text-slate-700">
-              <Users className="w-3.5 h-3.5 text-navy" />
-              {family.family_size} {lang === 'en' ? 'Members' : 'સભ્યો'}
-            </span>
-            <span className="flex items-center gap-1 font-medium text-slate-700">
-              <MapPin className="w-3.5 h-3.5 text-navy" />
-              {family.village}, {family.district}
-            </span>
-            <span className="flex items-center gap-1 font-medium text-slate-700">
-              <IndianRupee className="w-3.5 h-3.5 text-navy" />
-              ₹{(family.annual_income || 0).toLocaleString('en-IN')}/yr
-            </span>
-          </div>
+      <main className="max-w-3xl mx-auto px-4 py-8 w-full flex-1 space-y-6" id="main-content">
+        {/* Navigation Breadcrumb */}
+        <div className="flex items-center justify-between pb-2 border-b border-slate-border text-xs">
+          <Link
+            to="/citizen/login"
+            className="inline-flex items-center gap-1.5 font-semibold text-slate-secondary hover:text-navy"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>{lang === 'en' ? 'Back to Family Search' : 'પરિવાર શોધ પર પાછા જાઓ'}</span>
+          </Link>
+          <span className="font-mono text-xs font-bold text-navy bg-navy-subtle px-2 py-0.5 rounded">
+            {familyId}
+          </span>
         </div>
 
-        {/* 2 Key Action Status Cards */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="card-dpi p-4 bg-emerald-50/50 border-emerald-200">
-            <span className="text-[11px] font-bold text-emerald-900 block uppercase tracking-wider">
-              {lang === 'en' ? 'Active Benefits' : 'મળતા લાભો'}
-            </span>
-            <span className="text-2xl font-bold font-mono text-emerald-900 mt-1 block">
-              {receiving.length}
-            </span>
-            <span className="text-[11px] text-emerald-700 mt-0.5 block">
-              {lang === 'en' ? 'Currently receiving' : 'હાલમાં ચાલુ યોજનાઓ'}
-            </span>
+        {loading ? (
+          <div className="card-dpi p-16 text-center">
+            <div className="w-8 h-8 border-2 border-navy border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-xs text-slate-secondary">
+              {lang === 'en' ? 'Fetching verified civil registry records...' : 'પરિવારની કલ્યાણકારી વિગતો લોડ થઈ રહી છે...'}
+            </p>
           </div>
-
-          <div className="card-dpi p-4 bg-amber-50/70 border-2 border-amber-300">
-            <span className="text-[11px] font-bold text-amber-900 block uppercase tracking-wider flex items-center gap-1">
-              <AlertCircle className="w-3 h-3 text-amber-600" />
-              {lang === 'en' ? 'May Be Available' : 'મળી શકે તેવા લાભો'}
-            </span>
-            <span className="text-2xl font-bold font-mono text-amber-900 mt-1 block">
-              {gaps.length}
-            </span>
-            <span className="text-[11px] text-amber-800 mt-0.5 block font-medium">
-              {lang === 'en' ? 'Eligible to apply' : 'તમે પાત્ર છો'}
-            </span>
+        ) : error || !family ? (
+          <div className="card-dpi p-8 bg-white text-center">
+            <AlertCircle className="w-10 h-10 text-amber-600 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-slate-text mb-2">
+              {lang === 'en' ? 'Family Record Not Found' : 'પરિવારનો રેકોર્ડ મળ્યો નથી'}
+            </h3>
+            <p className="text-xs text-slate-secondary mb-4 leading-relaxed max-w-md mx-auto">{error}</p>
+            <Link
+              to="/citizen/login"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded text-xs font-semibold text-white bg-navy hover:bg-navy-dark"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{lang === 'en' ? 'Try Another Family ID' : 'બીજો આઈડી દાખલ કરો'}</span>
+            </Link>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Reassuring Welcome Summary */}
+            <div className="card-dpi p-6 bg-white border border-slate-border">
+              <div className="flex items-center justify-between gap-2 text-xs font-semibold text-navy mb-1.5">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  {lang === 'en' ? 'Civil Supplies Registry Verified' : 'અન્ન અને નાગરિક પુરવઠા વિભાગ ચકાસાયેલ'}
+                </span>
+                <span className="font-mono text-slate-400 text-[11px]">
+                  Ration: {family.ration_card_id || 'Not linked'}
+                </span>
+              </div>
 
-        {/* SECTION 1: Potential Benefits You May Be Eligible For (Prominent) */}
-        {gaps.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between pb-1 border-b border-amber-300">
-              <h3 className="text-sm font-bold text-amber-900 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                {lang === 'en' ? 'Recommended Schemes for Your Family' : 'તમારા પરિવાર માટે ભલામણ કરેલ યોજનાઓ'}
-              </h3>
-              <span className="text-[10px] font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
-                {lang === 'en' ? 'Apply Now' : 'અરજી કરો'}
-              </span>
+              <h1 className="text-xl font-bold font-serif text-navy">
+                {lang === 'en'
+                  ? `Welfare Entitlements for ${family.head_name || 'Your Household'}`
+                  : `${family.head_name || 'તમારા પરિવાર'} માટે સરકારી કલ્યાણ સહાય`}
+              </h1>
+
+              <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-slate-border text-xs text-slate-secondary">
+                <span className="flex items-center gap-1.5 font-medium text-slate-700">
+                  <Users className="w-3.5 h-3.5 text-navy" />
+                  {family.family_size} {lang === 'en' ? 'Members' : 'સભ્યો'}
+                </span>
+                <span className="flex items-center gap-1.5 font-medium text-slate-700">
+                  <MapPin className="w-3.5 h-3.5 text-navy" />
+                  {family.village}, {family.taluka}, {family.district}
+                </span>
+                <span className="flex items-center gap-1.5 font-medium text-slate-700">
+                  <IndianRupee className="w-3.5 h-3.5 text-navy" />
+                  ₹{(family.annual_income || 0).toLocaleString('en-IN')}/yr
+                </span>
+                <span className="font-medium px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[11px]">
+                  {family.social_category}
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {gaps.map((scheme) => {
-                const isApplied = appliedSchemes[scheme.scheme_id];
-                return (
-                  <div
-                    key={scheme.scheme_id}
-                    className="card-dpi p-4 bg-white border-2 border-amber-200 hover:border-amber-400 transition-all space-y-2 relative overflow-hidden"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                          {scheme.category}
-                        </span>
-                        <h4 className="text-sm font-bold text-slate-text mt-1">{scheme.scheme_name}</h4>
-                        <p className="text-xs text-slate-secondary mt-0.5">{scheme.benefit}</p>
-                      </div>
-                    </div>
+            {/* 2 Key Status Overview Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="card-dpi p-4 bg-emerald-50/60 border border-emerald-200">
+                <span className="text-[11px] font-bold text-emerald-900 block uppercase tracking-wider">
+                  {lang === 'en' ? 'Active Entitlements' : 'ચાલુ સહાય'}
+                </span>
+                <span className="text-2xl font-bold font-mono text-emerald-900 mt-1 block">
+                  {gapReport?.receiving_schemes?.length || 0}
+                </span>
+                <span className="text-[11px] text-emerald-700 mt-0.5 block">
+                  {lang === 'en' ? 'Currently receiving benefits' : 'હાલમાં મળતા સરકારી લાભો'}
+                </span>
+              </div>
 
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        {lang === 'en' ? 'Eligibility criteria satisfied' : 'તમે માપદંડ પૂર્ણ કરો છો'}
-                      </span>
-
-                      {isApplied ? (
-                        <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1 rounded border border-emerald-200 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          {lang === 'en' ? 'Applied' : 'અરજી સબમિટ થઈ'}
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handleApply(scheme)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded text-xs font-semibold text-white bg-orange hover:bg-orange-hover transition-colors shadow-sm"
-                        >
-                          <Send className="w-3 h-3" />
-                          <span>{lang === 'en' ? 'Submit Application' : 'અરજી કરો'}</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* SECTION 2: Active Schemes Currently Disbursed */}
-        {receiving.length > 0 && (
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between pb-1 border-b border-emerald-300">
-              <h3 className="text-sm font-bold text-emerald-900 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                {lang === 'en' ? 'Currently Received Benefits' : 'હાલમાં મળતા લાભો'}
-              </h3>
-              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
-                {lang === 'en' ? 'Active' : 'સક્રિય'}
-              </span>
+              <div className="card-dpi p-4 bg-amber-50/70 border-2 border-amber-300">
+                <span className="text-[11px] font-bold text-amber-900 block uppercase tracking-wider flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                  {lang === 'en' ? 'Eligible to Apply' : 'મળી શકે તેવા લાભો'}
+                </span>
+                <span className="text-2xl font-bold font-mono text-amber-900 mt-1 block">
+                  {gapReport?.gap_schemes?.length || 0}
+                </span>
+                <span className="text-[11px] text-amber-800 mt-0.5 block font-medium">
+                  {lang === 'en' ? 'Potential benefit gaps' : 'તમે પાત્ર છો પરંતુ અરજી બાકી'}
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              {receiving.map((scheme) => (
-                <div key={scheme.scheme_id} className="card-dpi p-3.5 bg-white border-emerald-200 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-semibold text-slate-400 block">{scheme.category}</span>
-                    <h4 className="text-xs font-bold text-slate-text">{scheme.scheme_name}</h4>
-                    <p className="text-[11px] text-slate-secondary">{scheme.benefit}</p>
-                  </div>
-                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
-                    ✓ {lang === 'en' ? 'Disbursing' : 'ચાલુ છે'}
+            {/* SECTION 1: Potential Benefits You May Be Eligible For */}
+            {gapReport?.gap_schemes && gapReport.gap_schemes.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between pb-1.5 border-b-2 border-amber-300">
+                  <h2 className="text-sm font-bold text-amber-900 flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    {lang === 'en' ? 'Recommended Schemes for Your Household' : 'તમારા પરિવાર માટે ભલામણ કરેલ યોજનાઓ'}
+                  </h2>
+                  <span className="text-[10px] font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
+                    {lang === 'en' ? 'Statutory Rule Match' : 'પાત્રતા પૂર્ણ'}
                   </span>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Reassuring Help & Contact Footer */}
-        <div className="p-4 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-secondary space-y-1">
-          <p className="font-semibold text-slate-text">
-            {lang === 'en' ? 'Need Help or Verification?' : 'સહાય કે ચકાસણી માટે માર્ગદર્શન જોઈએ છે?'}
-          </p>
-          <p>
-            {lang === 'en'
-              ? 'Visit your local Taluka e-Samaj Kalyan office or call the Gujarat Citizen Welfare Helpline at 1800-233-5500.'
-              : 'તમારા નજીકના તાલુકા ઈ-સમાજ કલ્યાણ કચેરીની મુલાકાત લો અથવા હેલ્પલાઇન 1800-233-5500 પર સંપર્ક કરો.'}
-          </p>
-        </div>
+                <div className="space-y-3">
+                  {gapReport.gap_schemes.map((scheme) => {
+                    const isApplied = appliedSchemes[scheme.scheme_id];
+                    return (
+                      <div
+                        key={scheme.scheme_id}
+                        className="card-dpi p-4 bg-white border-2 border-amber-200 hover:border-amber-400 transition-all space-y-2 relative overflow-hidden"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="text-[10px] font-mono font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                              {scheme.scheme_id} · {scheme.category}
+                            </span>
+                            <h3 className="text-sm font-bold text-slate-text mt-1">{scheme.scheme_name}</h3>
+                            <p className="text-xs text-slate-secondary mt-0.5">{scheme.benefit}</p>
+                          </div>
+                        </div>
+
+                        <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                          <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            {lang === 'en' ? 'Verified against income and caste criteria' : 'આવક અને જાતિ માપદંડ પૂર્ણ થયેલ છે'}
+                          </span>
+
+                          {isApplied ? (
+                            <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded border border-emerald-200 flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              {lang === 'en' ? 'Application Submitted' : 'અરજી સફળતાપૂર્વક સબમિટ થઈ'}
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleApply(scheme)}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded text-xs font-semibold text-white bg-orange hover:bg-orange-hover transition-colors shadow-sm"
+                            >
+                              <Send className="w-3 h-3" />
+                              <span>{lang === 'en' ? 'Submit Application' : 'અરજી કરો'}</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 2: Currently Received Benefits */}
+            {gapReport?.receiving_schemes && gapReport.receiving_schemes.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between pb-1.5 border-b-2 border-emerald-400">
+                  <h2 className="text-sm font-bold text-emerald-900 flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    {lang === 'en' ? 'Currently Received Benefits' : 'હાલમાં મળતા લાભો'}
+                  </h2>
+                  <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                    {lang === 'en' ? 'Active Disbursal' : 'ચાલુ સહાય'}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {gapReport.receiving_schemes.map((scheme) => (
+                    <div
+                      key={scheme.scheme_id}
+                      className="card-dpi p-4 bg-white border border-emerald-200 flex items-center justify-between"
+                    >
+                      <div>
+                        <span className="text-[10px] font-mono text-slate-400 block">
+                          {scheme.scheme_id} · {scheme.category}
+                        </span>
+                        <h3 className="text-xs font-bold text-slate-text">{scheme.scheme_name}</h3>
+                        <p className="text-[11px] text-slate-secondary mt-0.5">{scheme.benefit}</p>
+                      </div>
+                      <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200 shrink-0">
+                        ✓ {lang === 'en' ? 'Active' : 'ચાલુ છે'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Institutional Helpdesk Card */}
+            <div className="p-4 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-secondary space-y-1.5">
+              <p className="font-bold text-slate-text flex items-center gap-1.5">
+                <Building2 className="w-4 h-4 text-navy" />
+                {lang === 'en' ? 'Official Grievance & Verification Contact' : 'સહાય અને ચકાસણી માટે સંપર્ક'}
+              </p>
+              <p>
+                {lang === 'en'
+                  ? 'If any demographic detail is mismatched, visit your local Taluka e-Samaj Kalyan office with original documents or call the toll-free citizen helpline at 1800-233-5500.'
+                  : 'જો કોઈ વિગતમાં ભૂલ હોય તો મૂળ આધાર/રેશન કાર્ડ સાથે તમારા તાલુકા ઈ-સમાજ કલ્યાણ કેન્દ્રનો સંપર્ક કરો અથવા ટોલ-ફ્રી હેલ્પલાઇન 1800-233-5500 પર કૉલ કરો.'}
+              </p>
+            </div>
+          </>
+        )}
       </main>
 
-      <footer className="py-4 text-center text-xs text-slate-400 border-t border-slate-border">
-        Government of Gujarat · Digital Public Infrastructure
-      </footer>
+      {/* Official Government Footer */}
+      <NationalGovFooter />
     </div>
   );
 }
