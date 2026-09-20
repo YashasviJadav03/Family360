@@ -7,6 +7,8 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
+import DataQualityPanel from './DataQualityPanel';
+import AssistantPanel from './AssistantPanel';
 
 export default function DistrictDashboard({
   data = null,
@@ -156,6 +158,9 @@ export default function DistrictDashboard({
           </p>
         </div>
       </div>
+
+      {/* Cross-Registry Data Quality & Profile Completeness Telemetry */}
+      <DataQualityPanel />
 
       {/* Signature Section: Benefit Coverage Overview & Action Required */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -356,6 +361,9 @@ export default function DistrictDashboard({
           </div>
         </div>
       </div>
+
+      {/* Natural-Language Officer Query Assistant Panel */}
+      <AssistantPanel />
     </div>
   );
 }

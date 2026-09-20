@@ -39,7 +39,10 @@ export default function OfficerFamiliesPage() {
           page_size: pageSize,
         };
         if (district) params.district = district;
-        if (socialCategory) params.social_category = socialCategory;
+        if (socialCategory) {
+          params.category = socialCategory;
+          params.social_category = socialCategory;
+        }
         if (hasGapOnly) params.has_gap = true;
 
         const data = await familyApi.getFamilies(params);

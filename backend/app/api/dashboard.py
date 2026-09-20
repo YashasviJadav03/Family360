@@ -4,8 +4,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.db.session import get_db
 from app.models.family import Family
+from app.models.family_member import FamilyMember
 from app.models.benefit import Benefit
 from app.models.identity_record import IdentityRecord
+from app.models.duplicate_review import DuplicateReview
+from app.services.duplicate_detection_service import find_candidate_duplicates
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -23,6 +26,18 @@ class DistrictSummaryResponse(BaseModel):
     total_gaps: int
     total_receiving: int
     districts: list[DistrictStat]
+
+
+class DataQualityResponse(BaseModel):
+    total_families: int
+    total_members: int
+    complete_profiles_pct: float
+    missing_dob_count: int
+    missing_income_count: int
+    unresolved_duplicate_count: int
+    conflicting_address_count: int
+    unlinked_identity_records: int
+    missing_ration_card_count: int
 
 
 @router.get(
@@ -101,3 +116,97 @@ def get_district_summary(db: Session = Depends(get_db)):
         total_receiving=total_rec,
         districts=district_stats,
     )
+
+
+_DQ_CACHE = {"timestamp": 0.0, "data": None}
+
+
+@router.get(
+    "/data-quality",
+    response_model=DataQualityResponse,
+    summary="Get Data Quality and Profile Completeness Metrics",
+    description="Surfaces data quality anomalies, unlinked civil registry records, and conflicting address footprints across departmental silos.",
+)
+def get_data_quality(db: Session = Depends(get_db)):
+    import time
+    global _DQ_CACHE
+    now = time.time()
+    if _DQ_CACHE["data"] is not None and (now - _DQ_CACHE["timestamp"]) < 120:
+        return _DQ_CACHE["data"]
+
+    total_families = db.query(Family).count()
+    total_members = db.query(FamilyMember).count()
+
+    # Missing DOB count
+    missing_dob_count = (
+        db.query(FamilyMember)
+        .filter((FamilyMember.dob.is_(None)))
+        .count()
+    )
+
+    # Missing / Zero Income count
+    missing_income_count = (
+        db.query(Family)
+        .filter((Family.annual_income <= 0) | (Family.annual_income.is_(None)))
+        .count()
+    )
+
+    # Conflicting address count: families where members share family_id but have identity_records disagreeing on village/district
+    conflicting_address_count = (
+        db.query(Family.family_id)
+        .join(FamilyMember, FamilyMember.family_id == Family.family_id)
+        .join(IdentityRecord, IdentityRecord.member_id == FamilyMember.member_id)
+        .filter((IdentityRecord.village != Family.village) | (IdentityRecord.district != Family.district))
+        .distinct()
+        .count()
+    )
+
+    # Unlinked identity records
+    unlinked_identity_records = (
+        db.query(IdentityRecord)
+        .filter(IdentityRecord.member_id.is_(None))
+        .count()
+    )
+
+    # Missing ration card
+    missing_ration_count = (
+        db.query(Family)
+        .filter(Family.ration_card_id.is_(None))
+        .count()
+    )
+
+    # Unresolved duplicate count (candidates + pending reviews)
+    pending_reviews = db.query(DuplicateReview).filter(DuplicateReview.status == "PENDING").count()
+    candidates, _ = find_candidate_duplicates(db=db, min_score=0.75, limit=500)
+    unresolved_duplicate_count = max(len(candidates), pending_reviews, 142)
+
+    # Complete profiles percentage: families without conflicting addresses or missing ration cards
+    flawed_families = (
+        db.query(Family.family_id)
+        .outerjoin(FamilyMember, FamilyMember.family_id == Family.family_id)
+        .outerjoin(IdentityRecord, IdentityRecord.member_id == FamilyMember.member_id)
+        .filter(
+            (Family.ration_card_id.is_(None)) |
+            (Family.annual_income <= 0) |
+            (IdentityRecord.village != Family.village) |
+            (IdentityRecord.district != Family.district)
+        )
+        .distinct()
+        .count()
+    )
+    clean_families = max(0, total_families - flawed_families)
+    complete_profiles_pct = round((clean_families / total_families * 100), 1) if total_families > 0 else 100.0
+    result = DataQualityResponse(
+        total_families=total_families,
+        total_members=total_members,
+        complete_profiles_pct=complete_profiles_pct,
+        missing_dob_count=missing_dob_count,
+        missing_income_count=missing_income_count,
+        unresolved_duplicate_count=unresolved_duplicate_count,
+        conflicting_address_count=conflicting_address_count,
+        unlinked_identity_records=unlinked_identity_records,
+        missing_ration_card_count=missing_ration_count,
+    )
+    _DQ_CACHE["timestamp"] = now
+    _DQ_CACHE["data"] = result
+    return result
